@@ -130,6 +130,14 @@ function render() {
           </div>
           <button class="generate-btn" id="generateBtn"><span>✦</span>${t('generate')} <b>↗</b></button>
           <p class="notice" id="notice">✧ ${t('demoText')}</p>
+          <div class="import-video-panel">
+            <h3>${lang === 'ar' ? 'إضافة فيديو جاهز' : 'Add an existing video'}</h3>
+            <p>${lang === 'ar' ? 'ارفع فيديو MP4 من جهازك لعرضه داخل مساحة العمل.' : 'Upload an MP4 video from your device to preview it in your workspace.'}</p>
+            <label class="import-video-button" for="existingVideoInput">${lang === 'ar' ? 'اختيار فيديو من الجهاز' : 'Choose video from device'}</label>
+            <input id="existingVideoInput" type="file" accept="video/mp4,video/webm,video/quicktime" hidden>
+            <div id="existingVideoStatus" class="notice"></div>
+            <video id="existingVideoPreview" controls playsinline hidden></video>
+          </div>
         </div>
       </section>
       <section class="ideas-section" id="ideas">
@@ -184,6 +192,22 @@ function render() {
       const note=document.querySelector('.extra-controls .notice:last-child')
       note.textContent=lang==='ar'?'ارفع صورة أولاً ثم احفظها.':'Upload an image first, then save it.'
     }
+  })
+  let importedVideoUrl = null
+  document.querySelector('#existingVideoInput').addEventListener('change', event => {
+    const file = event.target.files && event.target.files[0]
+    const status = document.querySelector('#existingVideoStatus')
+    const preview = document.querySelector('#existingVideoPreview')
+    if (!file) return
+    if (!file.type.startsWith('video/')) {
+      status.textContent = lang === 'ar' ? 'الملف المحدد ليس فيديو.' : 'The selected file is not a video.'
+      return
+    }
+    if (importedVideoUrl) URL.revokeObjectURL(importedVideoUrl)
+    importedVideoUrl = URL.createObjectURL(file)
+    preview.src = importedVideoUrl
+    preview.hidden = false
+    status.textContent = (lang === 'ar' ? 'تم تحميل الفيديو للمعاينة: ' : 'Video ready to preview: ') + file.name
   })
   document.querySelector('#generateBtn').addEventListener('click', async () => {
     const prompt = document.querySelector('#prompt').value.trim()
