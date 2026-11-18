@@ -10,7 +10,7 @@ const copy = {
     textMode: 'من نص', imageMode: 'من صورة', storyMode: 'من قصة',
     upload: 'أضف صورة مرجعية', uploadHint: 'اسحب الصورة هنا أو اضغط للاختيار',
     motion: 'وصف الحركة المطلوبة', motionHint: 'مثال: تتحرك الشخصية وتبتسم وتلتفت نحو الكاميرا بحركة سينمائية ناعمة...',
-    voiceLanguage: 'لغة الصوت', voiceArabic: 'العربية', voiceEnglish: 'الإنجليزية',
+    voiceLanguage: 'لغة الصوت', voiceArabic: 'العربية', voiceEnglish: 'الإنجليزية', voiceAccent: 'اللهجة / اللكنة', accentMsa: 'العربية الفصحى', accentLevant: 'الشامية', accentEgypt: 'المصرية', accentGulf: 'الخليجية', accentUS: 'الإنجليزية الأمريكية', accentUK: 'الإنجليزية البريطانية',
     voiceType: 'نوع الصوت', voiceFemale: 'صوت نسائي', voiceMale: 'صوت رجالي',
     voiceCharacterMode: 'صوت الشخصيات', voiceOff: 'بدون صوت للشخصيات (حركة فقط)', voiceOn: 'الشخصيات تتحدث', voiceCharacter: 'صوت الشخصية', voiceChildBoy: 'ولد صغير', voiceChildGirl: 'بنت صغيرة', voiceYoungMan: 'شاب', voiceYoungWoman: 'فتاة شابة', voiceAdultMan: 'رجل بالغ', voiceAdultWoman: 'امرأة بالغة', voiceOldMan: 'رجل كبير في السن', voiceOldWoman: 'امرأة كبيرة في السن', voiceCartoon: 'صوت كرتوني',
     soundTitle: 'الأصوات والمؤثرات', autoSounds: 'اقترح الأصوات تلقائياً من القصة', autoSoundsHint: 'سيحلل النظام المشاهد ويقترح أصوات الشخصيات والحيوانات والمؤثرات، ويمكنك تعديلها.',
@@ -35,7 +35,7 @@ const copy = {
     textMode: 'Text to video', imageMode: 'Image to video', storyMode: 'Story to video',
     upload: 'Add a reference image', uploadHint: 'Drop an image here or click to browse',
     motion: 'Describe the motion', motionHint: 'Example: the character smiles and turns toward the camera with smooth cinematic movement...',
-    voiceLanguage: 'Voice language', voiceArabic: 'Arabic', voiceEnglish: 'English',
+    voiceLanguage: 'Voice language', voiceArabic: 'Arabic', voiceEnglish: 'English', voiceAccent: 'Dialect / accent', accentMsa: 'Modern Standard Arabic', accentLevant: 'Levantine Arabic', accentEgypt: 'Egyptian Arabic', accentGulf: 'Gulf Arabic', accentUS: 'American English', accentUK: 'British English',
     voiceType: 'Voice type', voiceFemale: 'Female voice', voiceMale: 'Male voice',
     voiceCharacterMode: 'Character audio', voiceOff: 'No character voice (motion only)', voiceOn: 'Characters speak', voiceCharacter: 'Character voice', voiceChildBoy: 'Young boy', voiceChildGirl: 'Young girl', voiceYoungMan: 'Young man', voiceYoungWoman: 'Young woman', voiceAdultMan: 'Adult man', voiceAdultWoman: 'Adult woman', voiceOldMan: 'Older man', voiceOldWoman: 'Older woman', voiceCartoon: 'Cartoon voice',
     soundTitle: 'Sounds and effects', autoSounds: 'Suggest sounds automatically from the story', autoSoundsHint: 'The system will analyze scenes and suggest character voices, animal sounds and effects. You can edit them.',
@@ -102,6 +102,7 @@ function render() {
             <label class="field-label" for="motionPrompt">${t('motion')}</label>
             <textarea id="motionPrompt" rows="2" placeholder="${t('motionHint')}"></textarea>
             <div class="setting"><label for="characterAudioMode">${t("voiceCharacterMode")}</label><select id="characterAudioMode"><option value="off">${t("voiceOff")}</option><option value="on">${t("voiceOn")}</option></select></div>
+            <div class="setting"><label for="voiceAccent">${t("voiceAccent")}</label><select id="voiceAccent"><option value="msa">${t("accentMsa")}</option><option value="levant">${t("accentLevant")}</option><option value="egypt">${t("accentEgypt")}</option><option value="gulf">${t("accentGulf")}</option><option value="us">${t("accentUS")}</option><option value="uk">${t("accentUK")}</option></select></div>
             <div class="settings-grid voice-grid">
               <div class="setting"><label for="voiceLanguage">${t('voiceLanguage')}</label><select id="voiceLanguage"><option value="ar">${t('voiceArabic')}</option><option value="en">${t('voiceEnglish')}</option></select></div>
               <div class="setting"><label for="voiceCharacter">${t('voiceCharacter')}</label><select id="voiceCharacter">
@@ -147,6 +148,16 @@ function render() {
     <div class="toast" id="toast" role="status"></div>
   `
   document.querySelector('#langBtn').addEventListener('click', () => { lang = lang === 'ar' ? 'en' : 'ar'; render() })
+  const voiceLanguage = document.querySelector('#voiceLanguage')
+  const voiceAccent = document.querySelector('#voiceAccent')
+  const updateAccentOptions = () => {
+    const choices = voiceLanguage.value === 'ar'
+      ? [['msa', t('accentMsa')], ['levant', t('accentLevant')], ['egypt', t('accentEgypt')], ['gulf', t('accentGulf')]]
+      : [['us', t('accentUS')], ['uk', t('accentUK')]]
+    voiceAccent.innerHTML = choices.map(([value, label]) => `<option value="${value}">${label}</option>`).join('')
+  }
+  voiceLanguage.addEventListener('change', updateAccentOptions)
+  updateAccentOptions()
   document.querySelectorAll('.mode-tab').forEach(b => b.addEventListener('click', () => { mode = b.dataset.mode; render() }))
   document.querySelectorAll('.idea-card').forEach(b => b.addEventListener('click', () => { document.querySelector('#prompt').value = t(b.dataset.idea); document.querySelector('#create').scrollIntoView({behavior:'smooth'}) }))
   document.querySelector('#browseBtn').addEventListener('click', () => document.querySelector('#imageInput').click())
