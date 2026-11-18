@@ -41,46 +41,18 @@ ${story.trim()}`;
       title: { type: 'STRING' },
       logline: { type: 'STRING' },
       visual_style: { type: 'STRING' },
-      characters: {
-        type: 'ARRAY',
-        items: {
-          type: 'OBJECT',
-          properties: {
-            name: { type: 'STRING' },
-            description: { type: 'STRING' },
-            visual_identity: { type: 'STRING' }
-          },
-          required: ['name', 'description', 'visual_identity']
-        }
-      },
-      scenes: {
-        type: 'ARRAY',
-        items: {
-          type: 'OBJECT',
-          properties: {
-            number: { type: 'INTEGER' },
-            title: { type: 'STRING' },
-            location: { type: 'STRING' },
-            visual_description: { type: 'STRING' },
-            action: { type: 'STRING' },
-            camera: { type: 'STRING' },
-            dialogue: {
-              type: 'ARRAY',
-              items: {
-                type: 'OBJECT',
-                properties: {
-                  character: { type: 'STRING' },
-                  line: { type: 'STRING' }
-                },
-                required: ['character', 'line']
-              }
-            },
-            sound_effects: { type: 'ARRAY', items: { type: 'STRING' } },
-            duration_seconds: { type: 'INTEGER' }
-          },
-          required: ['number', 'title', 'location', 'visual_description', 'action', 'camera', 'dialogue', 'sound_effects', 'duration_seconds']
-        }
-      }
+      characters: { type: 'ARRAY', items: { type: 'OBJECT', properties: {
+        name: { type: 'STRING' }, description: { type: 'STRING' }, visual_identity: { type: 'STRING' }
+      }, required: ['name', 'description', 'visual_identity'] } },
+      scenes: { type: 'ARRAY', items: { type: 'OBJECT', properties: {
+        number: { type: 'INTEGER' }, title: { type: 'STRING' }, location: { type: 'STRING' },
+        visual_description: { type: 'STRING' }, action: { type: 'STRING' }, camera: { type: 'STRING' },
+        dialogue: { type: 'ARRAY', items: { type: 'OBJECT', properties: {
+          character: { type: 'STRING' }, line: { type: 'STRING' }
+        }, required: ['character', 'line'] } },
+        sound_effects: { type: 'ARRAY', items: { type: 'STRING' } },
+        duration_seconds: { type: 'INTEGER' }
+      }, required: ['number', 'title', 'location', 'visual_description', 'action', 'camera', 'dialogue', 'sound_effects', 'duration_seconds'] } }
     },
     required: ['title', 'logline', 'visual_style', 'characters', 'scenes']
   };
@@ -89,26 +61,19 @@ ${story.trim()}`;
     const model = process.env.GEMINI_MODEL || 'gemini-3.8-flash';
     const upstream = await fetch('https://generativelanguage.googleapis.com/v1beta/interactions', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-goog-api-key': apiKey,
-      },
+      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
+      signal: AbortSignal.timeout(50000),
       body: JSON.stringify({
-        model,
-        input: prompt,
-        store: false,
-        response_format: {
-          type: 'text',
-          mime_type: 'application/json',
-          schema: responseSchema
-        }
+        model, input: prompt, store: false,
+        response_format: { type: 'text', mime_type: 'application/json', schema: responseSchema }
       })
     });
 
-    const data = await upstream.json();
+    const data = await upstream.json().catch(() => ({}));
     if (!upstream.ok) {
-      return res.status(upstream.status).json({
-        error: data.error?.message || 'تعذّر على محرك الذكاء الاصطناعي تحليل القصة.'
+      console.error('Gemini Interactions API error:', upstream.status, data.error?.message || 'Unknown upstream error');
+      return res.status(502).json({
+        error: data.error?.message || `تعذّر على Gemini معالجة القصة (HTTP ${upstream.status}).`
       });
     }
 
@@ -116,11 +81,11 @@ ${story.trim()}`;
       .filter(step => step.type === 'model_output')
       .flatMap(step => step.content || [])
       .filter(part => part.type === 'text' && part.text)
-      .map(part => part.text)
-      .join('');
+      .map(part => part.text).join('');
 
     if (!outputText) {
-      return res.status(502).json({ error: 'لم يرجع المحرك مخططاً للقصة. حاول مرة أخرى.' });
+      console.error('Gemini returned no output_text. Response keys:', Object.keys(data));
+      return res.status(502).json({ error: 'وصل رد من Gemini لكنه لا يحتوي على مخطط. حاول مرة أخرى.' });
     }
 
     const storyboard = JSON.parse(outputText);
@@ -129,6 +94,10 @@ ${story.trim()}`;
     }
     return res.status(200).json({ storyboard });
   } catch (error) {
-    return res.status(502).json({ error: 'حدث خطأ أثناء تحويل القصة إلى مشاهد.' });
+    console.error('Storyboard request failed:', error?.name || 'Error', error?.message || '');
+    if (error?.name === 'TimeoutError' || error?.name === 'AbortError') {
+      return res.status(504).json({ error: 'استغرق Gemini وقتاً أطول من اللازم. حاول مرة أخرى بعد قليل.' });
+    }
+    return res.status(502).json({ error: 'حدث خطأ أثناء الاتصال بمحرك Gemini. راجع إعداد المفتاح وحاول مجدداً.' });
   }
 }
