@@ -42,6 +42,7 @@ const copy = {
 let lang = 'ar'
 let mode = 'text'
 let selectedImage = null
+let selectedImageData = null
 const t = key => copy[lang][key]
 const app = document.querySelector('#app')
 
@@ -129,7 +130,7 @@ function render() {
     if(file) {
       selectedImage=file.name
       const reader=new FileReader()
-      reader.onload=()=>{ selectedImageData=reader.result; document.querySelector('.upload-zone strong').textContent=selectedImage }
+      reader.onload=()=>{ selectedImageData=reader.result; document.querySelector('.upload-zone strong').textContent=selectedImage; const preview=document.createElement('img'); preview.src=selectedImageData; preview.className='image-preview'; preview.alt='Selected reference'; document.querySelector('#uploadZone').prepend(preview); const icon=document.querySelector('.upload-icon'); if(icon) icon.remove() }
       reader.readAsDataURL(file)
     }
   })
