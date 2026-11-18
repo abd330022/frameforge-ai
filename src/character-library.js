@@ -34,7 +34,7 @@ function compressImage(file) {
   });
 }
 
-function mountLibrary() {
+export function mountCharacterLibrary() {
   const card = document.querySelector('.creator-card');
   const upload = card?.querySelector('#uploadZone');
   if (!card || !upload || card.querySelector('#characterLibrary')) return;
@@ -151,6 +151,3 @@ function mountLibrary() {
   window.addEventListener('storage', renderGallery);
 }
 
-const observer = new MutationObserver(() => mountLibrary());
-observer.observe(document.documentElement, { childList: true, subtree: true });
-mountLibrary();
