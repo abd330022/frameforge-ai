@@ -130,7 +130,7 @@ export function mountCharacterLibrary() {
     gallery.innerHTML = items.length ? items.map(p => {
       const isSelected = selected.includes(p.id), isFav = favorites.includes(p.id);
       return `<button type="button" class="character-tile ${isSelected?'selected':''}" data-id="${escapeHtml(p.id)}" aria-pressed="${isSelected}">
-        <span class="character-photo"><img src="${escapeHtml(p.image)}" alt="${escapeHtml(p.name)}" loading="lazy"><span class="character-check">${isSelected?'✓':''}</span></span>
+        <span class="character-photo"><span class="portrait-sprite" role="img" aria-label="${escapeHtml(p.name)}" style="--portrait-position:${(p.slot%4)*33.333}% ${Math.floor(p.slot/4)*33.333}%"></span><span class="character-check">${isSelected?'✓':''}</span></span>
         <span class="character-name">${escapeHtml(p.name)}</span>
         <span class="character-favorite" data-favorite="${escapeHtml(p.id)}" title="${isFav?t.unfavorite:t.favorite}">${isFav?'♥':'♡'}</span>
       </button>`;
