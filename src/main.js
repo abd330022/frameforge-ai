@@ -9,7 +9,14 @@ const copy = {
     promptLabel: 'صف الفيديو الذي تتخيله', placeholder: 'مثال: فارس عربي يمتطي حصاناً في صحراء ذهبية وقت الغروب، لقطة سينمائية...',
     textMode: 'من نص', imageMode: 'من صورة', storyMode: 'من قصة',
     upload: 'أضف صورة مرجعية', uploadHint: 'اسحب الصورة هنا أو اضغط للاختيار',
-    motion: 'وصف الحركة المطلوبة', motionHint: 'مثال: تتحرك الشخصية وتبتسم وتلتفت نحو الكاميرا بحركة سينمائية ناعمة...', voiceLanguage: 'لغة الصوت', voiceArabic: 'العربية', voiceEnglish: 'الإنجليزية', voiceType: 'نوع الصوت', voiceFemale: 'صوت نسائي', voiceMale: 'صوت رجالي', saveCharacter: 'حفظ الصورة كشخصية مرجعية على هذا الجهاز', characterNote: 'هذه إعدادات واجهة أولية؛ التوليد الصوتي وتحريك الفيديو يحتاجان محركاً خارجياً.',
+    motion: 'وصف الحركة المطلوبة', motionHint: 'مثال: تتحرك الشخصية وتبتسم وتلتفت نحو الكاميرا بحركة سينمائية ناعمة...',
+    voiceLanguage: 'لغة الصوت', voiceArabic: 'العربية', voiceEnglish: 'الإنجليزية',
+    voiceType: 'نوع الصوت', voiceFemale: 'صوت نسائي', voiceMale: 'صوت رجالي',
+    voiceCharacter: 'صوت الشخصية', voiceChildBoy: 'ولد صغير', voiceChildGirl: 'بنت صغيرة', voiceYoungMan: 'شاب', voiceYoungWoman: 'فتاة شابة', voiceAdultMan: 'رجل بالغ', voiceAdultWoman: 'امرأة بالغة', voiceOldMan: 'رجل كبير في السن', voiceOldWoman: 'امرأة كبيرة في السن', voiceCartoon: 'صوت كرتوني',
+    soundTitle: 'الأصوات والمؤثرات', autoSounds: 'اقترح الأصوات تلقائياً من القصة', autoSoundsHint: 'سيحلل النظام المشاهد ويقترح أصوات الشخصيات والحيوانات والمؤثرات، ويمكنك تعديلها.',
+    soundEffects: 'المؤثرات الصوتية', soundEffectsHint: 'مثل اصطدام، سقوط، تحطم زجاج، خطوات، مطر ورعد', animalSounds: 'أصوات الحيوانات', animalSoundsHint: 'مثل كلب، قطة، حصان، أسد وطيور',
+    saveCharacter: 'حفظ الصورة كشخصية مرجعية على هذا الجهاز',
+    characterNote: 'إعدادات الصوت هنا لتجهيز اختياراتك؛ تشغيل الأصوات وتوليدها يحتاجان إلى ربط محرك صوت.',
     duration: 'المدة', style: 'النمط البصري', ratio: 'الأبعاد',
     seconds: 'ثوانٍ', cinematic: 'سينمائي', anime: 'أنمي', realistic: 'واقعي', cartoon: 'كرتوني',
     generate: 'إنشاء الفيديو', free: 'تجربة الواجهة — بدون تكلفة',
@@ -27,7 +34,14 @@ const copy = {
     promptLabel: 'Describe the video you imagine', placeholder: 'Example: An Arabian horseman crossing golden dunes at sunset, cinematic camera movement...',
     textMode: 'Text to video', imageMode: 'Image to video', storyMode: 'Story to video',
     upload: 'Add a reference image', uploadHint: 'Drop an image here or click to browse',
-    motion: 'Describe the motion', motionHint: 'Example: the character smiles and turns toward the camera with smooth cinematic movement...', voiceLanguage: 'Voice language', voiceArabic: 'Arabic', voiceEnglish: 'English', voiceType: 'Voice type', voiceFemale: 'Female voice', voiceMale: 'Male voice', saveCharacter: 'Save image as a character reference on this device', characterNote: 'These are initial interface settings; video animation and voice generation require an external engine.',
+    motion: 'Describe the motion', motionHint: 'Example: the character smiles and turns toward the camera with smooth cinematic movement...',
+    voiceLanguage: 'Voice language', voiceArabic: 'Arabic', voiceEnglish: 'English',
+    voiceType: 'Voice type', voiceFemale: 'Female voice', voiceMale: 'Male voice',
+    voiceCharacter: 'Character voice', voiceChildBoy: 'Young boy', voiceChildGirl: 'Young girl', voiceYoungMan: 'Young man', voiceYoungWoman: 'Young woman', voiceAdultMan: 'Adult man', voiceAdultWoman: 'Adult woman', voiceOldMan: 'Older man', voiceOldWoman: 'Older woman', voiceCartoon: 'Cartoon voice',
+    soundTitle: 'Sounds and effects', autoSounds: 'Suggest sounds automatically from the story', autoSoundsHint: 'The system will analyze scenes and suggest character voices, animal sounds and effects. You can edit them.',
+    soundEffects: 'Sound effects', soundEffectsHint: 'Such as collision, fall, breaking glass, footsteps, rain and thunder', animalSounds: 'Animal sounds', animalSoundsHint: 'Such as dog, cat, horse, lion and birds',
+    saveCharacter: 'Save image as a character reference on this device',
+    characterNote: 'These voice settings prepare your choices; playing and generating audio requires a connected audio engine.',
     duration: 'Duration', style: 'Visual style', ratio: 'Aspect ratio',
     seconds: 'seconds', cinematic: 'Cinematic', anime: 'Anime', realistic: 'Realistic', cartoon: 'Cartoon',
     generate: 'Create video', free: 'Interface preview — no cost',
@@ -89,8 +103,19 @@ function render() {
             <textarea id="motionPrompt" rows="2" placeholder="${t('motionHint')}"></textarea>
             <div class="settings-grid voice-grid">
               <div class="setting"><label for="voiceLanguage">${t('voiceLanguage')}</label><select id="voiceLanguage"><option value="ar">${t('voiceArabic')}</option><option value="en">${t('voiceEnglish')}</option></select></div>
-              <div class="setting"><label for="voiceType">${t('voiceType')}</label><select id="voiceType"><option>${t('voiceFemale')}</option><option>${t('voiceMale')}</option></select></div>
+              <div class="setting"><label for="voiceCharacter">${t('voiceCharacter')}</label><select id="voiceCharacter">
+                <option>${t('voiceChildBoy')}</option><option>${t('voiceChildGirl')}</option><option>${t('voiceYoungMan')}</option><option>${t('voiceYoungWoman')}</option><option>${t('voiceAdultMan')}</option><option>${t('voiceAdultWoman')}</option><option>${t('voiceOldMan')}</option><option>${t('voiceOldWoman')}</option><option>${t('voiceCartoon')}</option>
+              </select></div>
             </div>
+            <section class="sound-panel">
+              <h3>${t('soundTitle')}</h3>
+              <label class="save-character"><input type="checkbox" id="autoSounds" checked /> ${t('autoSounds')}</label>
+              <p class="notice">${t('autoSoundsHint')}</p>
+              <div class="settings-grid">
+                <div class="setting"><label for="animalSounds">${t('animalSounds')}</label><input id="animalSounds" type="text" placeholder="${t('animalSoundsHint')}" /></div>
+                <div class="setting"><label for="soundEffects">${t('soundEffects')}</label><input id="soundEffects" type="text" placeholder="${t('soundEffectsHint')}" /></div>
+              </div>
+            </section>
             <label class="save-character"><input type="checkbox" id="saveCharacter" /> ${t('saveCharacter')}</label>
             <p class="notice">${t('characterNote')}</p>
           </div>
@@ -137,11 +162,11 @@ function render() {
   document.querySelector('#saveCharacter').addEventListener('change', e => {
     if(e.target.checked && selectedImageData) {
       try { localStorage.setItem('frameforge-character', JSON.stringify({name:selectedImage,data:selectedImageData})) } catch(err) {}
-      const note=document.querySelector('.extra-controls .notice')
+      const note=document.querySelector('.extra-controls .notice:last-child')
       note.textContent=lang==='ar'?'تم حفظ مرجع الصورة على هذا الجهاز.':'Image reference saved on this device.'
     } else if(e.target.checked) {
       e.target.checked=false
-      const note=document.querySelector('.extra-controls .notice')
+      const note=document.querySelector('.extra-controls .notice:last-child')
       note.textContent=lang==='ar'?'ارفع صورة أولاً ثم احفظها.':'Upload an image first, then save it.'
     }
   })
