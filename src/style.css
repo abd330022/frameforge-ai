@@ -50,3 +50,7 @@
 .character-empty{grid-column:1/-1;text-align:center;border:1px dashed #594574;border-radius:12px;padding:28px;color:#a9a1bd;font-size:13px}
 @media(max-width:1050px){.character-gallery{grid-template-columns:repeat(6,minmax(0,1fr))}}
 @media(max-width:760px){.character-library{padding:14px;margin:18px 0}.character-library-title h3{font-size:18px}.character-library-hint{font-size:11px}.character-gallery{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.character-tools{align-items:stretch}.character-filters{width:100%}.character-filter{padding:7px 10px;font-size:11px}.character-search{max-width:none}.character-use-button{width:100%}.character-selected-summary{order:3;width:100%}}
+
+/* AI-generated portrait contact sheet: fixed sprite crop for each built-in character */
+.character-photo .portrait-sprite{position:absolute;inset:0;display:block;background-image:var(--portrait-sprite);background-size:400% 400%;background-position:var(--portrait-position);background-repeat:no-repeat;transform:scale(1.02)}
+.character-photo img{display:none}
