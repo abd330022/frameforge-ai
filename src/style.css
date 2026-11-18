@@ -89,3 +89,20 @@ html[dir="ltr"] body{margin-right:0;margin-left:248px}
 #existingVideoStatus:empty{display:none}
 
 .save-video-button{display:inline-flex;margin-top:12px;padding:11px 16px;border:1px solid #8a65c7;border-radius:10px;background:#2c2144;color:#f4eaff;font-size:12px;font-weight:700;cursor:pointer}.save-video-button:disabled{opacity:.55;cursor:wait}.save-video-button[hidden]{display:none}
+
+
+/* AI story-to-storyboard workspace */
+.story-planner{margin:22px 0;padding:22px;border:1px solid rgba(130,150,180,.22);border-radius:18px;background:rgba(18,28,48,.38)}
+.story-planner-heading{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.story-planner-heading h3{margin:6px 0;font-size:20px}
+.story-planner>p{color:var(--muted,#9aa8bd);line-height:1.7}
+.story-planner-tag{font-size:12px;padding:7px 11px;border-radius:20px;background:rgba(120,150,220,.12)}
+.story-planner .generate-btn{width:100%;margin:12px 0}
+.storyboard-result{margin-top:20px}
+.storyboard-summary,.storyboard-character,.storyboard-scene{padding:16px;margin:12px 0;border:1px solid rgba(130,150,180,.2);border-radius:14px;background:rgba(10,18,32,.34)}
+.storyboard-summary h3{margin:0 0 8px}
+.storyboard-summary p,.storyboard-character p,.storyboard-scene p{line-height:1.65}
+.storyboard-characters{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}
+.storyboard-character small,.storyboard-scene small{color:var(--muted,#9aa8bd);line-height:1.6}
+.storyboard-scene-top{display:flex;justify-content:space-between;gap:12px;align-items:center}
+.storyboard-scene-top span{font-size:12px;color:var(--muted,#9aa8bd);white-space:nowrap}
