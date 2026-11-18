@@ -87,3 +87,5 @@ html[dir="ltr"] body{margin-right:0;margin-left:248px}
 #existingVideoPreview{display:block;width:100%;max-height:480px;margin-top:14px;border-radius:12px;background:#05060a}
 #existingVideoPreview[hidden]{display:none}
 #existingVideoStatus:empty{display:none}
+
+.save-video-button{display:inline-flex;margin-top:12px;padding:11px 16px;border:1px solid #8a65c7;border-radius:10px;background:#2c2144;color:#f4eaff;font-size:12px;font-weight:700;cursor:pointer}.save-video-button:disabled{opacity:.55;cursor:wait}.save-video-button[hidden]{display:none}
