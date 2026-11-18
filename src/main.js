@@ -1,5 +1,5 @@
 import './style.css'
-import './character-library.js'
+import { mountCharacterLibrary } from './character-library.js'
 
 const copy = {
   ar: {
@@ -148,6 +148,7 @@ function render() {
     <footer><a class="brand" href="#"><span class="brand-mark">F</span><span>FrameForge <i>AI</i></span></a><p>${t('footer')}</p><span>© 2026 FRAMEFORGE AI</span></footer>
     <div class="toast" id="toast" role="status"></div>
   `
+  mountCharacterLibrary()
   document.querySelector('#langBtn').addEventListener('click', () => { lang = lang === 'ar' ? 'en' : 'ar'; render() })
   const voiceLanguage = document.querySelector('#voiceLanguage')
   const voiceAccent = document.querySelector('#voiceAccent')
