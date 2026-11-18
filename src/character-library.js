@@ -70,6 +70,7 @@ export function mountCharacterLibrary() {
   const section = document.createElement('section');
   section.id = 'characterLibrary';
   section.className = 'character-library';
+  section.style.setProperty('--portrait-sprite', 'url("' + PORTRAIT_SPRITE + '")');
   section.innerHTML = `
     <div class="character-library-top">
       <div class="character-library-title"><span class="character-library-icon">♙</span><div><span class="section-kicker">CAST YOUR STORY</span><h3></h3><p class="character-library-hint"></p></div></div>
