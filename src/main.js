@@ -10,7 +10,7 @@ const copy = {
     promptLabel: 'صف الفيديو الذي تتخيله', placeholder: 'مثال: فارس عربي يمتطي حصاناً في صحراء ذهبية وقت الغروب، لقطة سينمائية...',
     textMode: 'من نص', imageMode: 'من صورة', storyMode: 'من قصة',
     upload: 'أضف صورة مرجعية', uploadHint: 'اسحب الصورة هنا أو اضغط للاختيار',
-    motion: 'وصف الحركة المطلوبة', motionHint: 'مثال: تتحرك الشخصية وتبتسم وتلتفت نحو الكاميرا بحركة سينمائية ناعمة...',
+    motion: 'وصف الحركة المطلوبة', motionHint: 'مثال: يمشي البطل نحو الباب ويفتحه، ثم تقترب الكاميرا منه ببطء...',
     voiceLanguage: 'لغة الصوت', voiceArabic: 'العربية', voiceEnglish: 'الإنجليزية', voiceAccent: 'اللهجة / اللكنة', accentMsa: 'العربية الفصحى', accentLevant: 'الشامية', accentEgypt: 'المصرية', accentGulf: 'الخليجية', accentUS: 'الإنجليزية الأمريكية', accentUK: 'الإنجليزية البريطانية',
     voiceType: 'نوع الصوت', voiceFemale: 'صوت نسائي', voiceMale: 'صوت رجالي',
     voiceCharacterMode: 'صوت الشخصيات', voiceOff: 'بدون صوت للشخصيات (حركة فقط)', voiceOn: 'الشخصيات تتحدث', voiceCharacter: 'صوت الشخصية', voiceChildBoy: 'ولد صغير', voiceChildGirl: 'بنت صغيرة', voiceYoungMan: 'شاب', voiceYoungWoman: 'فتاة شابة', voiceAdultMan: 'رجل بالغ', voiceAdultWoman: 'امرأة بالغة', voiceOldMan: 'رجل كبير في السن', voiceOldWoman: 'امرأة كبيرة في السن', voiceCartoon: 'صوت كرتوني',
@@ -35,7 +35,7 @@ const copy = {
     promptLabel: 'Describe the video you imagine', placeholder: 'Example: An Arabian horseman crossing golden dunes at sunset, cinematic camera movement...',
     textMode: 'Text to video', imageMode: 'Image to video', storyMode: 'Story to video',
     upload: 'Add a reference image', uploadHint: 'Drop an image here or click to browse',
-    motion: 'Describe the motion', motionHint: 'Example: the character smiles and turns toward the camera with smooth cinematic movement...',
+    motion: 'Describe the motion', motionHint: 'Example: the hero walks to the door and opens it, then the camera slowly moves closer...',
     voiceLanguage: 'Voice language', voiceArabic: 'Arabic', voiceEnglish: 'English', voiceAccent: 'Dialect / accent', accentMsa: 'Modern Standard Arabic', accentLevant: 'Levantine Arabic', accentEgypt: 'Egyptian Arabic', accentGulf: 'Gulf Arabic', accentUS: 'American English', accentUK: 'British English',
     voiceType: 'Voice type', voiceFemale: 'Female voice', voiceMale: 'Male voice',
     voiceCharacterMode: 'Character audio', voiceOff: 'No character voice (motion only)', voiceOn: 'Characters speak', voiceCharacter: 'Character voice', voiceChildBoy: 'Young boy', voiceChildGirl: 'Young girl', voiceYoungMan: 'Young man', voiceYoungWoman: 'Young woman', voiceAdultMan: 'Adult man', voiceAdultWoman: 'Adult woman', voiceOldMan: 'Older man', voiceOldWoman: 'Older woman', voiceCartoon: 'Cartoon voice',
@@ -65,13 +65,14 @@ function render() {
   document.documentElement.lang = lang
   document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr'
   app.innerHTML = `
+    <aside class="side-nav"><a class="brand side-brand" href="#home"><span class="brand-mark">F</span><span>FrameForge <i>AI</i></span></a><div class="side-caption">مساحة العمل</div><nav class="side-links"><a href="#home">⌂　الرئيسية</a><a class="side-active" href="#create">✦　إنشاء الفيديو</a><a href="#ideas">◈　استكشاف</a><a href="#create">▤　مشاريعي</a><a href="#characterLibrary">♙　مكتبة الشخصيات</a></nav><div class="side-bottom"><a href="#create">⚙　الإعدادات</a><a href="#how">؟　المساعدة</a></div></aside>
     <header class="topbar">
       <a class="brand" href="#" aria-label="FrameForge AI home"><span class="brand-mark">F</span><span>FrameForge <i>AI</i></span></a>
       <nav><a href="#create">${t('navCreate')}</a><a href="#how">${t('navExplore')}</a></nav>
       <div class="top-actions"><button class="lang-btn" id="langBtn">${t('language')}</button><a class="signin" href="#create">${t('signIn')}</a></div>
     </header>
     <main>
-      <section class="hero">
+      <section class="hero" id="home">
         <div class="orb orb-one"></div><div class="orb orb-two"></div>
         <div class="hero-copy">
           <div class="eyebrow"><span class="spark">✦</span>${t('badge')}</div>
@@ -131,7 +132,7 @@ function render() {
           <p class="notice" id="notice">✧ ${t('demoText')}</p>
         </div>
       </section>
-      <section class="ideas-section">
+      <section class="ideas-section" id="ideas">
         <div class="section-heading"><div><span class="section-kicker">02 / INSPIRE</span><h2>${t('ideas')}</h2></div></div>
         <div class="idea-grid">
           <button class="idea-card idea-a" data-idea="idea1"><span class="idea-number">01</span><strong>${t('idea1')}</strong><span class="idea-arrow">↗</span></button>
