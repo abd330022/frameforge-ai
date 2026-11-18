@@ -9,6 +9,7 @@ const copy = {
     promptLabel: 'صف الفيديو الذي تتخيله', placeholder: 'مثال: فارس عربي يمتطي حصاناً في صحراء ذهبية وقت الغروب، لقطة سينمائية...',
     textMode: 'من نص', imageMode: 'من صورة', storyMode: 'من قصة',
     upload: 'أضف صورة مرجعية', uploadHint: 'اسحب الصورة هنا أو اضغط للاختيار',
+    motion: 'وصف الحركة المطلوبة', motionHint: 'مثال: تتحرك الشخصية وتبتسم وتلتفت نحو الكاميرا بحركة سينمائية ناعمة...', voiceLanguage: 'لغة الصوت', voiceArabic: 'العربية', voiceEnglish: 'الإنجليزية', voiceType: 'نوع الصوت', voiceFemale: 'صوت نسائي', voiceMale: 'صوت رجالي', saveCharacter: 'حفظ الصورة كشخصية مرجعية على هذا الجهاز', characterNote: 'هذه إعدادات واجهة أولية؛ التوليد الصوتي وتحريك الفيديو يحتاجان محركاً خارجياً.',
     duration: 'المدة', style: 'النمط البصري', ratio: 'الأبعاد',
     seconds: 'ثوانٍ', cinematic: 'سينمائي', anime: 'أنمي', realistic: 'واقعي', cartoon: 'كرتوني',
     generate: 'إنشاء الفيديو', free: 'تجربة الواجهة — بدون تكلفة',
@@ -26,6 +27,7 @@ const copy = {
     promptLabel: 'Describe the video you imagine', placeholder: 'Example: An Arabian horseman crossing golden dunes at sunset, cinematic camera movement...',
     textMode: 'Text to video', imageMode: 'Image to video', storyMode: 'Story to video',
     upload: 'Add a reference image', uploadHint: 'Drop an image here or click to browse',
+    motion: 'Describe the motion', motionHint: 'Example: the character smiles and turns toward the camera with smooth cinematic movement...', voiceLanguage: 'Voice language', voiceArabic: 'Arabic', voiceEnglish: 'English', voiceType: 'Voice type', voiceFemale: 'Female voice', voiceMale: 'Male voice', saveCharacter: 'Save image as a character reference on this device', characterNote: 'These are initial interface settings; video animation and voice generation require an external engine.',
     duration: 'Duration', style: 'Visual style', ratio: 'Aspect ratio',
     seconds: 'seconds', cinematic: 'Cinematic', anime: 'Anime', realistic: 'Realistic', cartoon: 'Cartoon',
     generate: 'Create video', free: 'Interface preview — no cost',
@@ -81,6 +83,16 @@ function render() {
             <input type="file" id="imageInput" accept="image/*" hidden />
             <div class="upload-icon">＋</div><div><strong>${selectedImage ? selectedImage : t('upload')}</strong><small>${t('uploadHint')}</small></div><button class="browse-btn" id="browseBtn">+</button>
           </div>
+          <div class="extra-controls">
+            <label class="field-label" for="motionPrompt">${t('motion')}</label>
+            <textarea id="motionPrompt" rows="2" placeholder="${t('motionHint')}"></textarea>
+            <div class="settings-grid voice-grid">
+              <div class="setting"><label for="voiceLanguage">${t('voiceLanguage')}</label><select id="voiceLanguage"><option value="ar">${t('voiceArabic')}</option><option value="en">${t('voiceEnglish')}</option></select></div>
+              <div class="setting"><label for="voiceType">${t('voiceType')}</label><select id="voiceType"><option>${t('voiceFemale')}</option><option>${t('voiceMale')}</option></select></div>
+            </div>
+            <label class="save-character"><input type="checkbox" id="saveCharacter" /> ${t('saveCharacter')}</label>
+            <p class="notice">${t('characterNote')}</p>
+          </div>
           <div class="settings-grid">
             <div class="setting"><label for="duration">${t('duration')}</label><select id="duration"><option>5 ${t('seconds')}</option><option>10 ${t('seconds')}</option><option>15 ${t('seconds')}</option></select></div>
             <div class="setting"><label for="style">${t('style')}</label><select id="style"><option>${t('cinematic')}</option><option>${t('realistic')}</option><option>${t('anime')}</option><option>${t('cartoon')}</option></select></div>
@@ -112,7 +124,26 @@ function render() {
   document.querySelectorAll('.idea-card').forEach(b => b.addEventListener('click', () => { document.querySelector('#prompt').value = t(b.dataset.idea); document.querySelector('#create').scrollIntoView({behavior:'smooth'}) }))
   document.querySelector('#browseBtn').addEventListener('click', () => document.querySelector('#imageInput').click())
   document.querySelector('#uploadZone').addEventListener('click', e => { if(e.target.id !== 'browseBtn') document.querySelector('#imageInput').click() })
-  document.querySelector('#imageInput').addEventListener('change', e => { if(e.target.files[0]) { selectedImage = e.target.files[0].name; document.querySelector('.upload-zone strong').textContent = selectedImage } })
+  document.querySelector('#imageInput').addEventListener('change', e => {
+    const file=e.target.files[0]
+    if(file) {
+      selectedImage=file.name
+      const reader=new FileReader()
+      reader.onload=()=>{ selectedImageData=reader.result; document.querySelector('.upload-zone strong').textContent=selectedImage }
+      reader.readAsDataURL(file)
+    }
+  })
+  document.querySelector('#saveCharacter').addEventListener('change', e => {
+    if(e.target.checked && selectedImageData) {
+      try { localStorage.setItem('frameforge-character', JSON.stringify({name:selectedImage,data:selectedImageData})) } catch(err) {}
+      const note=document.querySelector('.extra-controls .notice')
+      note.textContent=lang==='ar'?'تم حفظ مرجع الصورة على هذا الجهاز.':'Image reference saved on this device.'
+    } else if(e.target.checked) {
+      e.target.checked=false
+      const note=document.querySelector('.extra-controls .notice')
+      note.textContent=lang==='ar'?'ارفع صورة أولاً ثم احفظها.':'Upload an image first, then save it.'
+    }
+  })
   document.querySelector('#generateBtn').addEventListener('click', () => {
     const prompt = document.querySelector('#prompt').value.trim()
     const toast = document.querySelector('#toast')
