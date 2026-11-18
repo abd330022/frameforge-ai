@@ -86,32 +86,44 @@ ${story.trim()}`;
   };
 
   try {
-    const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
-    const upstream = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+    const model = process.env.GEMINI_MODEL || 'gemini-3.8-flash';
+    const upstream = await fetch('https://generativelanguage.googleapis.com/v1beta/interactions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'x-goog-api-key': apiKey,
       },
       body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: {
-          responseMimeType: 'application/json',
-          responseSchema,
-          temperature: 0.7,
-          maxOutputTokens: 4096
+        model,
+        input: prompt,
+        store: false,
+        response_format: {
+          type: 'text',
+          mime_type: 'application/json',
+          schema: responseSchema
         }
       })
     });
+
     const data = await upstream.json();
     if (!upstream.ok) {
       return res.status(upstream.status).json({
         error: data.error?.message || 'تعذّر على محرك الذكاء الاصطناعي تحليل القصة.'
       });
     }
-    const text = data.candidates?.[0]?.content?.parts?.map(part => part.text || '').join('');
-    if (!text) return res.status(502).json({ error: 'لم يرجع المحرك مخططاً للقصة. حاول مرة أخرى.' });
-    const storyboard = JSON.parse(text);
+
+    const outputText = data.output_text || (data.steps || [])
+      .filter(step => step.type === 'model_output')
+      .flatMap(step => step.content || [])
+      .filter(part => part.type === 'text' && part.text)
+      .map(part => part.text)
+      .join('');
+
+    if (!outputText) {
+      return res.status(502).json({ error: 'لم يرجع المحرك مخططاً للقصة. حاول مرة أخرى.' });
+    }
+
+    const storyboard = JSON.parse(outputText);
     if (!Array.isArray(storyboard.scenes) || storyboard.scenes.length === 0) {
       return res.status(502).json({ error: 'المخطط الناتج غير مكتمل. حاول مرة أخرى.' });
     }
