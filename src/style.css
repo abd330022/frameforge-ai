@@ -7,3 +7,7 @@
 @media(min-width:761px) and (max-width:980px){.hero{gap:25px}.hero h1{font-size:48px}.art-frame{height:330px}}
 .extra-controls{margin-top:20px;padding:18px;border:1px solid #ffffff16;border-radius:12px;background:#0e101c}.extra-controls textarea{margin-bottom:14px}.voice-grid{grid-template-columns:repeat(2,1fr);margin:12px 0}.save-character{display:flex;align-items:center;gap:9px;color:#d9d4ed;font-size:12px;cursor:pointer}.save-character input{accent-color:#a995ff}.image-preview{width:64px;height:64px;object-fit:cover;border-radius:9px;border:1px solid #ffffff30}.upload-zone.has-image{border-style:solid;border-color:#7767a7}
 @media(max-width:760px){.voice-grid{grid-template-columns:1fr}}
+
+.image-preview{animation:frameforge-preview-motion 3.8s ease-in-out infinite;transform-origin:center}
+@keyframes frameforge-preview-motion{0%,100%{transform:scale(1) translateY(0) rotate(0deg);filter:saturate(1)}50%{transform:scale(1.07) translateY(-5px) rotate(1deg);filter:saturate(1.12)}}
+.extra-controls .notice{margin-top:10px}
