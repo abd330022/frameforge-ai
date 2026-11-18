@@ -1,32 +1,60 @@
-const STORAGE_KEY = 'frameforge-character-library-v1';
-const MAX_CHARACTERS = 8;
-const MAX_IMAGE_SIDE = 720;
+const STORAGE_KEY = 'frameforge-character-library-v2';
+const SELECTED_KEY = 'frameforge-selected-characters-v1';
+const FAVORITES_KEY = 'frameforge-character-favorites-v1';
+const MAX_CUSTOM = 8;
 
-const labels = () => document.documentElement.lang === 'ar'
-  ? { title: 'مكتبة الشخصيات', hint: 'احفظ صوراً مرجعية لشخصيات قصتك على هذا الجهاز، واختر الشخصية التي تريد العمل عليها.', add: 'إضافة صور شخصيات', active: 'الشخصية النشطة', empty: 'لم تحفظ أي شخصية بعد. أضف صورة واضحة للشخصية.', saved: 'تم حفظ الشخصية في هذا الجهاز.', limit: 'يمكن حفظ 8 شخصيات كحد أقصى.', remove: 'حذف', use: 'اختيار', selected: 'محددة', name: 'اسم الشخصية', privacy: 'الصور تبقى في متصفحك على هذا الجهاز ولا تُرفع إلى خادم.' }
-  : { title: 'Character library', hint: 'Save visual references for your story characters on this device, then choose the character you want to work with.', add: 'Add character images', active: 'Active character', empty: 'No characters saved yet. Add a clear image of a character.', saved: 'Character saved on this device.', limit: 'You can save up to 8 characters.', remove: 'Remove', use: 'Select', selected: 'Selected', name: 'Character name', privacy: 'Images stay in this browser on this device and are not uploaded to a server.' };
+const people = [
+  {id:'zara',name:'Zara',type:'women',age:'adult',image:'https://randomuser.me/api/portraits/women/44.jpg'},
+  {id:'mei',name:'Mei',type:'women',age:'young',image:'https://randomuser.me/api/portraits/women/68.jpg'},
+  {id:'james',name:'James',type:'men',age:'adult',image:'https://randomuser.me/api/portraits/men/32.jpg'},
+  {id:'priya',name:'Priya',type:'women',age:'adult',image:'https://randomuser.me/api/portraits/women/32.jpg'},
+  {id:'mason',name:'Mason',type:'men',age:'young',image:'https://randomuser.me/api/portraits/men/75.jpg'},
+  {id:'zoe',name:'Zoe',type:'women',age:'young',image:'https://randomuser.me/api/portraits/women/23.jpg'},
+  {id:'aria',name:'Aria',type:'women',age:'young',image:'https://randomuser.me/api/portraits/women/50.jpg'},
+  {id:'leo',name:'Leo',type:'men',age:'adult',image:'https://randomuser.me/api/portraits/men/18.jpg'},
+  {id:'sofia',name:'Sofia',type:'women',age:'adult',image:'https://randomuser.me/api/portraits/women/65.jpg'},
+  {id:'kai',name:'Kai',type:'men',age:'young',image:'https://randomuser.me/api/portraits/men/22.jpg'},
+  {id:'ren',name:'Ren',type:'men',age:'young',image:'https://randomuser.me/api/portraits/men/12.jpg'},
+  {id:'nia',name:'Nia',type:'women',age:'young',image:'https://randomuser.me/api/portraits/women/12.jpg'},
+  {id:'victor',name:'Victor',type:'men',age:'older',image:'https://randomuser.me/api/portraits/men/68.jpg'},
+  {id:'layla',name:'Layla',type:'women',age:'adult',image:'https://randomuser.me/api/portraits/women/54.jpg'},
+  {id:'omar',name:'Omar',type:'men',age:'adult',image:'https://randomuser.me/api/portraits/men/29.jpg'},
+  {id:'hana',name:'Hana',type:'women',age:'adult',image:'https://randomuser.me/api/portraits/women/12.jpg'}
+];
 
-function readLibrary() {
-  try {
-    const value = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-    return Array.isArray(value) ? value : [];
-  } catch { return []; }
+const labels = () => document.documentElement.lang === 'ar' ? {
+  title:'مكتبة الشخصيات', hint:'اختر شخصية جاهزة لاستخدامها في قصتك، أو أضف شخصياتك الخاصة.',
+  search:'ابحث عن شخصية...', all:'الكل', men:'رجال', women:'نساء', young:'شباب', older:'كبار السن',
+  selected:'الشخصيات المحددة', use:'استخدام الشخصيات المحددة', add:'إضافة شخصية خاصة',
+  empty:'لا توجد نتائج مطابقة لبحثك.', saved:'تم تحديث الشخصيات المختارة.',
+  count:'شخصية', custom:'شخصياتي', favorite:'إضافة للمفضلة', unfavorite:'إزالة من المفضلة'
+} : {
+  title:'Character library', hint:'Choose ready-made actors for your story, or add your own characters.',
+  search:'Search characters...', all:'All', men:'Men', women:'Women', young:'Young adults', older:'Older adults',
+  selected:'Selected characters', use:'Use selected characters', add:'Add custom character',
+  empty:'No matching characters found.', saved:'Your character selection has been updated.',
+  count:'selected', custom:'My characters', favorite:'Add to favorites', unfavorite:'Remove from favorites'
+};
+
+function read(key, fallback) {
+  try { const v = JSON.parse(localStorage.getItem(key) || 'null'); return v ?? fallback; } catch { return fallback; }
 }
-
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
 function compressImage(file) {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve,reject) => {
     const reader = new FileReader();
     reader.onerror = reject;
     reader.onload = () => {
       const img = new Image();
       img.onerror = reject;
       img.onload = () => {
-        const scale = Math.min(1, MAX_IMAGE_SIDE / Math.max(img.width, img.height));
+        const scale = Math.min(1,640/Math.max(img.width,img.height));
         const canvas = document.createElement('canvas');
-        canvas.width = Math.round(img.width * scale);
-        canvas.height = Math.round(img.height * scale);
-        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-        resolve(canvas.toDataURL('image/jpeg', 0.78));
+        canvas.width = Math.round(img.width*scale); canvas.height = Math.round(img.height*scale);
+        canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);
+        resolve(canvas.toDataURL('image/jpeg',.78));
       };
       img.src = reader.result;
     };
@@ -43,111 +71,110 @@ export function mountCharacterLibrary() {
   section.id = 'characterLibrary';
   section.className = 'character-library';
   section.innerHTML = `
-    <div class="character-library-heading"><div><span class="section-kicker">CHARACTER CONSISTENCY</span><h3>${labels().title}</h3></div><span class="character-count"></span></div>
-    <p class="character-library-hint"></p>
-    <input id="characterLibraryInput" type="file" accept="image/*" multiple hidden>
-    <button type="button" class="character-add-button" id="characterAddButton">＋ <span></span></button>
+    <div class="character-library-top">
+      <div class="character-library-title"><span class="character-library-icon">♙</span><div><span class="section-kicker">CAST YOUR STORY</span><h3></h3><p class="character-library-hint"></p></div></div>
+      <span class="character-count"></span>
+    </div>
+    <div class="character-tools">
+      <div class="character-filters" role="group" aria-label="Character filters">
+        <button type="button" class="character-filter active" data-filter="all"></button>
+        <button type="button" class="character-filter" data-filter="men"></button>
+        <button type="button" class="character-filter" data-filter="women"></button>
+        <button type="button" class="character-filter" data-filter="young"></button>
+        <button type="button" class="character-filter" data-filter="older"></button>
+      </div>
+      <label class="character-search"><span>⌕</span><input id="characterSearch" type="search" autocomplete="off"></label>
+    </div>
     <div class="character-gallery" id="characterGallery"></div>
+    <div class="character-library-footer">
+      <button type="button" class="character-add-button" id="characterAddButton">＋ <span></span></button>
+      <input id="characterLibraryInput" type="file" accept="image/*" multiple hidden>
+      <div class="character-selected-summary" id="characterSelectedSummary"></div>
+      <button type="button" class="character-use-button" id="characterUseButton" disabled></button>
+    </div>
     <p class="character-library-privacy"></p>
   `;
-  upload.insertAdjacentElement('afterend', section);
-
-  const style = document.createElement('style');
-  style.textContent = `
-    .character-library{margin:22px 0;padding:20px;border:1px solid rgba(160,130,255,.24);border-radius:18px;background:rgba(120,90,210,.055)}
-    .character-library-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}
-    .character-library-heading h3{margin:5px 0;font-size:19px}
-    .character-library-hint,.character-library-privacy{color:var(--muted,#999);font-size:13px;line-height:1.7}
-    .character-add-button{border:1px dashed #9472ee;background:rgba(145,110,240,.10);color:inherit;border-radius:12px;padding:12px 16px;cursor:pointer;font:inherit;width:100%;text-align:center}
-    .character-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px;margin-top:16px}
-    .character-item{min-width:0;border:1px solid rgba(160,130,255,.2);border-radius:13px;padding:9px;background:rgba(20,18,32,.45)}
-    .character-item.active{border-color:#a58aff;box-shadow:0 0 0 1px #a58aff}
-    .character-item img{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:9px;display:block}
-    .character-item input{width:100%;box-sizing:border-box;margin:8px 0 6px;padding:7px;border-radius:7px;border:1px solid #555;background:transparent;color:inherit}
-    .character-item-actions{display:flex;gap:6px}
-    .character-item-actions button{flex:1;padding:6px 4px;border-radius:7px;border:1px solid #66558e;background:transparent;color:inherit;cursor:pointer;font-size:12px}
-    .character-empty{grid-column:1/-1;padding:16px;border:1px dashed rgba(160,130,255,.25);border-radius:10px;text-align:center;color:var(--muted,#999);font-size:13px}
-    .character-count{font-size:12px;color:var(--muted,#999)}
-  `;
-  document.head.append(style);
+  upload.insertAdjacentElement('afterend',section);
 
   const input = section.querySelector('#characterLibraryInput');
   const gallery = section.querySelector('#characterGallery');
-  let activeId = null;
+  const search = section.querySelector('#characterSearch');
+  let filter = 'all';
+  let selected = read(SELECTED_KEY, []);
+  let favorites = read(FAVORITES_KEY, []);
+  let custom = read(STORAGE_KEY, []);
 
+  function allPeople() {
+    return [...people, ...custom.map(item => ({...item,type:'custom',age:'custom'}))];
+  }
   function renderGallery() {
-    const text = labels();
-    const items = readLibrary();
-    section.querySelector('h3').textContent = text.title;
-    section.querySelector('.character-library-hint').textContent = text.hint;
-    section.querySelector('.character-library-privacy').textContent = text.privacy;
-    section.querySelector('#characterAddButton span').textContent = text.add;
-    section.querySelector('.character-count').textContent = `${items.length}/${MAX_CHARACTERS}`;
-    if (!items.length) {
-      gallery.innerHTML = `<div class="character-empty">${text.empty}</div>`;
-      return;
+    const t = labels();
+    section.querySelector('h3').textContent = t.title;
+    section.querySelector('.character-library-hint').textContent = t.hint;
+    section.querySelector('.character-count').textContent = `${selected.length} / 16`;
+    section.querySelector('#characterAddButton span').textContent = t.add;
+    section.querySelector('#characterUseButton').textContent = t.use;
+    section.querySelector('.character-library-privacy').textContent = document.documentElement.lang === 'ar'
+      ? 'يمكنك اختيار أكثر من شخصية. الصور الجاهزة تُعرض من مكتبة الصور، والصور الخاصة تُحفظ في هذا المتصفح.'
+      : 'Select more than one character. Ready-made portraits load from the image library; custom images stay in this browser.';
+    const filters = {all:t.all,men:t.men,women:t.women,young:t.young,older:t.older};
+    section.querySelectorAll('.character-filter').forEach(btn => {
+      btn.textContent = filters[btn.dataset.filter];
+      btn.classList.toggle('active',btn.dataset.filter===filter);
+    });
+    const q = search.value.trim().toLowerCase();
+    const items = allPeople().filter(p => {
+      const matchesFilter = filter==='all' || (filter==='young' ? p.age==='young' : filter==='older' ? p.age==='older' : p.type===filter);
+      return matchesFilter && p.name.toLowerCase().includes(q);
+    });
+    gallery.innerHTML = items.length ? items.map(p => {
+      const isSelected = selected.includes(p.id), isFav = favorites.includes(p.id);
+      return `<button type="button" class="character-tile ${isSelected?'selected':''}" data-id="${escapeHtml(p.id)}" aria-pressed="${isSelected}">
+        <span class="character-photo"><img src="${escapeHtml(p.image)}" alt="${escapeHtml(p.name)}" loading="lazy"><span class="character-check">${isSelected?'✓':''}</span></span>
+        <span class="character-name">${escapeHtml(p.name)}</span>
+        <span class="character-favorite" data-favorite="${escapeHtml(p.id)}" title="${isFav?t.unfavorite:t.favorite}">${isFav?'♥':'♡'}</span>
+      </button>`;
+    }).join('') : `<div class="character-empty">${t.empty}</div>`;
+    const chosen = allPeople().filter(p => selected.includes(p.id));
+    section.querySelector('#characterSelectedSummary').innerHTML = `<strong>${t.selected}: ${chosen.length}</strong><span>${chosen.map(p=>escapeHtml(p.name)).join('، ')}</span>`;
+    section.querySelector('#characterUseButton').disabled = !chosen.length;
+  }
+
+  section.querySelectorAll('.character-filter').forEach(btn => btn.addEventListener('click',() => { filter=btn.dataset.filter; renderGallery(); }));
+  search.addEventListener('input',renderGallery);
+  gallery.addEventListener('click',event => {
+    const favorite = event.target.closest('[data-favorite]');
+    if (favorite) {
+      const id=favorite.dataset.favorite;
+      favorites=favorites.includes(id)?favorites.filter(x=>x!==id):[...favorites,id];
+      localStorage.setItem(FAVORITES_KEY,JSON.stringify(favorites)); renderGallery(); return;
     }
-    gallery.innerHTML = items.map(item => `
-      <article class="character-item ${item.id === activeId ? 'active' : ''}" data-id="${item.id}">
-        <img src="${item.image}" alt="">
-        <input aria-label="${text.name}" value="${escapeHtml(item.name)}" maxlength="40">
-        <div class="character-item-actions">
-          <button type="button" data-action="select">${item.id === activeId ? text.selected : text.use}</button>
-          <button type="button" data-action="remove">${text.remove}</button>
-        </div>
-      </article>`).join('');
-  }
-
-  function escapeHtml(value) {
-    return String(value).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
-  }
-
-  section.querySelector('#characterAddButton').addEventListener('click', () => input.click());
-  input.addEventListener('change', async () => {
-    const files = [...input.files].filter(file => file.type.startsWith('image/'));
-    let items = readLibrary();
-    for (const file of files) {
-      if (items.length >= MAX_CHARACTERS) { alert(labels().limit); break; }
+    const tile=event.target.closest('.character-tile');
+    if (!tile) return;
+    const id=tile.dataset.id;
+    selected=selected.includes(id)?selected.filter(x=>x!==id):[...selected,id];
+    localStorage.setItem(SELECTED_KEY,JSON.stringify(selected)); renderGallery();
+  });
+  section.querySelector('#characterAddButton').addEventListener('click',()=>input.click());
+  input.addEventListener('change',async()=>{
+    for (const file of [...input.files].filter(f=>f.type.startsWith('image/'))) {
+      if (custom.length>=MAX_CUSTOM) { alert(document.documentElement.lang==='ar'?'يمكنك إضافة 8 صور خاصة كحد أقصى.':'You can add up to 8 custom images.'); break; }
       try {
-        const image = await compressImage(file);
-        const item = { id: (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random()), name: file.name.replace(/\.[^.]+$/, '').slice(0,40) || 'Character', image };
-        items.push(item);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-        if (!activeId) activeId = item.id;
-      } catch {
-        alert(document.documentElement.lang === 'ar' ? 'تعذر قراءة إحدى الصور. جرّب صورة أخرى.' : 'Could not read one of the images. Try another image.');
-      }
+        const image=await compressImage(file);
+        const item={id:'custom-'+Date.now()+'-'+Math.random().toString(16).slice(2),name:file.name.replace(/\.[^.]+$/,'').slice(0,36)||'Custom',image};
+        custom.push(item); localStorage.setItem(STORAGE_KEY,JSON.stringify(custom));
+      } catch { alert(document.documentElement.lang==='ar'?'تعذرت قراءة إحدى الصور.':'Could not read one of the images.'); }
     }
-    input.value = '';
-    renderGallery();
+    input.value=''; renderGallery();
   });
-
-  gallery.addEventListener('input', event => {
-    if (!event.target.matches('input')) return;
-    const item = event.target.closest('.character-item');
-    const items = readLibrary();
-    const found = items.find(entry => entry.id === item.dataset.id);
-    if (found) {
-      found.name = event.target.value.slice(0,40);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-    }
+  section.querySelector('#characterUseButton').addEventListener('click',()=>{
+    const chosen=allPeople().filter(p=>selected.includes(p.id));
+    window.dispatchEvent(new CustomEvent('frameforge:characters-selected',{detail:{characters:chosen}}));
+    const notice=document.querySelector('#notice');
+    if (notice) notice.textContent=document.documentElement.lang==='ar'
+      ? 'تم اختيار الشخصيات: '+chosen.map(p=>p.name).join('، ')+'. ستُستخدم كمرجع عند ربط محرك التوليد.'
+      : 'Selected characters: '+chosen.map(p=>p.name).join(', ')+'. They will be used as references when a generation engine is connected.';
+    section.querySelector('#characterUseButton').textContent=labels().saved;
   });
-
-  gallery.addEventListener('click', event => {
-    const button = event.target.closest('button[data-action]');
-    if (!button) return;
-    const item = button.closest('.character-item');
-    const items = readLibrary();
-    if (button.dataset.action === 'remove') {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(items.filter(entry => entry.id !== item.dataset.id)));
-      if (activeId === item.dataset.id) activeId = null;
-    } else {
-      activeId = item.dataset.id;
-    }
-    renderGallery();
-  });
-
   renderGallery();
-  window.addEventListener('storage', renderGallery);
 }
-
