@@ -61,7 +61,7 @@ ${story.trim()}`;
     const upstream = await fetch('https://generativelanguage.googleapis.com/v1beta/interactions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
-      signal: AbortSignal.timeout(22000),
+      signal: AbortSignal.timeout(15000),
       body: JSON.stringify({
         model, input: prompt, store: false,
         response_format: { type: 'text', mime_type: 'application/json', schema: responseSchema }
@@ -72,26 +72,38 @@ ${story.trim()}`;
   }
 
   try {
-    const primaryModel = process.env.GEMINI_MODEL || 'gemini-3.8-flash';
-    const fallbackModel = process.env.GEMINI_FALLBACK_MODEL || 'gemini-3.5-flash-lite';
-    let result = await requestModel(primaryModel);
-    let usedModel = primaryModel;
+    const models = [
+      process.env.GEMINI_MODEL || 'gemini-3.8-flash',
+      process.env.GEMINI_FALLBACK_MODEL || 'gemini-3.5-flash-lite',
+      process.env.GEMINI_LAST_FALLBACK_MODEL || 'gemini-3.1-flash-lite'
+    ].filter((model, index, all) => model && all.indexOf(model) === index);
 
-    const errorMessage = result.data.error?.message || '';
-    const overloaded = result.upstream.status === 429 || result.upstream.status === 503 ||
-      /high demand|overload|temporarily unavailable|resource exhausted/i.test(errorMessage);
+    let result;
+    let usedModel;
+    for (let index = 0; index < models.length; index += 1) {
+      usedModel = models[index];
+      result = await requestModel(usedModel);
+      if (result.upstream.ok) break;
 
-    if (!result.upstream.ok && overloaded && fallbackModel && fallbackModel !== primaryModel) {
-      console.warn(`Primary Gemini model ${primaryModel} is busy; trying fallback ${fallbackModel}.`);
-      result = await requestModel(fallbackModel);
-      usedModel = fallbackModel;
+      const message = result.data.error?.message || '';
+      const overloaded = result.upstream.status === 429 || result.upstream.status === 503 ||
+        /high demand|overload|temporarily unavailable|resource exhausted/i.test(message);
+
+      if (!overloaded || index === models.length - 1) break;
+      console.warn(`Gemini model ${usedModel} is busy; trying next configured fallback.`);
     }
 
     const { upstream, data } = result;
     if (!upstream.ok) {
       console.error('Gemini Interactions API error:', upstream.status, data.error?.message || 'Unknown upstream error');
-      return res.status(502).json({
-        error: data.error?.message || `تعذّر على Gemini معالجة القصة (HTTP ${upstream.status}). حاول مرة أخرى بعد قليل.`
+      const message = data.error?.message || '';
+      const overloaded = upstream.status === 429 || upstream.status === 503 ||
+        /high demand|overload|temporarily unavailable|resource exhausted/i.test(message);
+      return res.status(overloaded ? 503 : 502).json({
+        code: overloaded ? 'GEMINI_TEMPORARILY_BUSY' : 'GEMINI_REQUEST_FAILED',
+        error: overloaded
+          ? 'خدمات Gemini مزدحمة حالياً حتى بعد تجربة النماذج الاحتياطية. انتظر قليلاً ثم أعد المحاولة.'
+          : (message || `تعذّر على Gemini معالجة القصة (HTTP ${upstream.status}).`)
       });
     }
 
