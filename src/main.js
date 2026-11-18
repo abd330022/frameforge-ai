@@ -12,7 +12,7 @@ const copy = {
     motion: 'وصف الحركة المطلوبة', motionHint: 'مثال: تتحرك الشخصية وتبتسم وتلتفت نحو الكاميرا بحركة سينمائية ناعمة...',
     voiceLanguage: 'لغة الصوت', voiceArabic: 'العربية', voiceEnglish: 'الإنجليزية',
     voiceType: 'نوع الصوت', voiceFemale: 'صوت نسائي', voiceMale: 'صوت رجالي',
-    voiceCharacter: 'صوت الشخصية', voiceChildBoy: 'ولد صغير', voiceChildGirl: 'بنت صغيرة', voiceYoungMan: 'شاب', voiceYoungWoman: 'فتاة شابة', voiceAdultMan: 'رجل بالغ', voiceAdultWoman: 'امرأة بالغة', voiceOldMan: 'رجل كبير في السن', voiceOldWoman: 'امرأة كبيرة في السن', voiceCartoon: 'صوت كرتوني',
+    voiceCharacterMode: 'صوت الشخصيات', voiceOff: 'بدون صوت للشخصيات (حركة فقط)', voiceOn: 'الشخصيات تتحدث', voiceCharacter: 'صوت الشخصية', voiceChildBoy: 'ولد صغير', voiceChildGirl: 'بنت صغيرة', voiceYoungMan: 'شاب', voiceYoungWoman: 'فتاة شابة', voiceAdultMan: 'رجل بالغ', voiceAdultWoman: 'امرأة بالغة', voiceOldMan: 'رجل كبير في السن', voiceOldWoman: 'امرأة كبيرة في السن', voiceCartoon: 'صوت كرتوني',
     soundTitle: 'الأصوات والمؤثرات', autoSounds: 'اقترح الأصوات تلقائياً من القصة', autoSoundsHint: 'سيحلل النظام المشاهد ويقترح أصوات الشخصيات والحيوانات والمؤثرات، ويمكنك تعديلها.',
     soundEffects: 'المؤثرات الصوتية', soundEffectsHint: 'مثل اصطدام، سقوط، تحطم زجاج، خطوات، مطر ورعد', animalSounds: 'أصوات الحيوانات', animalSoundsHint: 'مثل كلب، قطة، حصان، أسد وطيور',
     saveCharacter: 'حفظ الصورة كشخصية مرجعية على هذا الجهاز',
@@ -37,7 +37,7 @@ const copy = {
     motion: 'Describe the motion', motionHint: 'Example: the character smiles and turns toward the camera with smooth cinematic movement...',
     voiceLanguage: 'Voice language', voiceArabic: 'Arabic', voiceEnglish: 'English',
     voiceType: 'Voice type', voiceFemale: 'Female voice', voiceMale: 'Male voice',
-    voiceCharacter: 'Character voice', voiceChildBoy: 'Young boy', voiceChildGirl: 'Young girl', voiceYoungMan: 'Young man', voiceYoungWoman: 'Young woman', voiceAdultMan: 'Adult man', voiceAdultWoman: 'Adult woman', voiceOldMan: 'Older man', voiceOldWoman: 'Older woman', voiceCartoon: 'Cartoon voice',
+    voiceCharacterMode: 'Character audio', voiceOff: 'No character voice (motion only)', voiceOn: 'Characters speak', voiceCharacter: 'Character voice', voiceChildBoy: 'Young boy', voiceChildGirl: 'Young girl', voiceYoungMan: 'Young man', voiceYoungWoman: 'Young woman', voiceAdultMan: 'Adult man', voiceAdultWoman: 'Adult woman', voiceOldMan: 'Older man', voiceOldWoman: 'Older woman', voiceCartoon: 'Cartoon voice',
     soundTitle: 'Sounds and effects', autoSounds: 'Suggest sounds automatically from the story', autoSoundsHint: 'The system will analyze scenes and suggest character voices, animal sounds and effects. You can edit them.',
     soundEffects: 'Sound effects', soundEffectsHint: 'Such as collision, fall, breaking glass, footsteps, rain and thunder', animalSounds: 'Animal sounds', animalSoundsHint: 'Such as dog, cat, horse, lion and birds',
     saveCharacter: 'Save image as a character reference on this device',
@@ -101,6 +101,7 @@ function render() {
           <div class="extra-controls">
             <label class="field-label" for="motionPrompt">${t('motion')}</label>
             <textarea id="motionPrompt" rows="2" placeholder="${t('motionHint')}"></textarea>
+            <div class="setting"><label for="characterAudioMode">${t("voiceCharacterMode")}</label><select id="characterAudioMode"><option value="off">${t("voiceOff")}</option><option value="on">${t("voiceOn")}</option></select></div>
             <div class="settings-grid voice-grid">
               <div class="setting"><label for="voiceLanguage">${t('voiceLanguage')}</label><select id="voiceLanguage"><option value="ar">${t('voiceArabic')}</option><option value="en">${t('voiceEnglish')}</option></select></div>
               <div class="setting"><label for="voiceCharacter">${t('voiceCharacter')}</label><select id="voiceCharacter">
@@ -173,7 +174,8 @@ function render() {
   document.querySelector('#generateBtn').addEventListener('click', () => {
     const prompt = document.querySelector('#prompt').value.trim()
     const toast = document.querySelector('#toast')
-    toast.textContent = prompt ? t('alertDemo') : t('alertPrompt')
+    const characterAudioMode = document.querySelector('#characterAudioMode').value
+    toast.textContent = prompt ? (characterAudioMode === 'off' ? (lang === 'ar' ? 'تم اختيار حركة فقط بدون كلام للشخصيات. المؤثرات الخارجية تبقى حسب إعداداتها. التوليد الحقيقي غير متاح حتى ربط المحرك.' : 'Motion only selected; characters will not speak. External effects remain controlled separately. Real generation is not connected yet.') : t('alertDemo')) : t('alertPrompt')
     toast.classList.add('show')
     setTimeout(() => toast.classList.remove('show'), 5500)
   })
