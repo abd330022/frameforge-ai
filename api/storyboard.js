@@ -57,23 +57,41 @@ ${story.trim()}`;
     required: ['title', 'logline', 'visual_style', 'characters', 'scenes']
   };
 
-  try {
-    const model = process.env.GEMINI_MODEL || 'gemini-3.8-flash';
+  async function requestModel(model) {
     const upstream = await fetch('https://generativelanguage.googleapis.com/v1beta/interactions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
-      signal: AbortSignal.timeout(50000),
+      signal: AbortSignal.timeout(22000),
       body: JSON.stringify({
         model, input: prompt, store: false,
         response_format: { type: 'text', mime_type: 'application/json', schema: responseSchema }
       })
     });
-
     const data = await upstream.json().catch(() => ({}));
+    return { upstream, data };
+  }
+
+  try {
+    const primaryModel = process.env.GEMINI_MODEL || 'gemini-3.8-flash';
+    const fallbackModel = process.env.GEMINI_FALLBACK_MODEL || 'gemini-3.5-flash-lite';
+    let result = await requestModel(primaryModel);
+    let usedModel = primaryModel;
+
+    const errorMessage = result.data.error?.message || '';
+    const overloaded = result.upstream.status === 429 || result.upstream.status === 503 ||
+      /high demand|overload|temporarily unavailable|resource exhausted/i.test(errorMessage);
+
+    if (!result.upstream.ok && overloaded && fallbackModel && fallbackModel !== primaryModel) {
+      console.warn(`Primary Gemini model ${primaryModel} is busy; trying fallback ${fallbackModel}.`);
+      result = await requestModel(fallbackModel);
+      usedModel = fallbackModel;
+    }
+
+    const { upstream, data } = result;
     if (!upstream.ok) {
       console.error('Gemini Interactions API error:', upstream.status, data.error?.message || 'Unknown upstream error');
       return res.status(502).json({
-        error: data.error?.message || `تعذّر على Gemini معالجة القصة (HTTP ${upstream.status}).`
+        error: data.error?.message || `تعذّر على Gemini معالجة القصة (HTTP ${upstream.status}). حاول مرة أخرى بعد قليل.`
       });
     }
 
@@ -84,7 +102,7 @@ ${story.trim()}`;
       .map(part => part.text).join('');
 
     if (!outputText) {
-      console.error('Gemini returned no output_text. Response keys:', Object.keys(data));
+      console.error('Gemini returned no output_text. Model:', usedModel, 'Response keys:', Object.keys(data));
       return res.status(502).json({ error: 'وصل رد من Gemini لكنه لا يحتوي على مخطط. حاول مرة أخرى.' });
     }
 
@@ -92,7 +110,7 @@ ${story.trim()}`;
     if (!Array.isArray(storyboard.scenes) || storyboard.scenes.length === 0) {
       return res.status(502).json({ error: 'المخطط الناتج غير مكتمل. حاول مرة أخرى.' });
     }
-    return res.status(200).json({ storyboard });
+    return res.status(200).json({ storyboard, model: usedModel });
   } catch (error) {
     console.error('Storyboard request failed:', error?.name || 'Error', error?.message || '');
     if (error?.name === 'TimeoutError' || error?.name === 'AbortError') {
