@@ -76,3 +76,14 @@ html[dir="ltr"] body{margin-right:0;margin-left:248px}
 .selected-character-chips{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}
 .selected-character-chip{display:inline-flex;align-items:center;gap:9px;padding:6px 10px;border:1px solid #7550a8;border-radius:999px;background:#211833;color:#f4edff;font-size:12px;cursor:pointer}
 .selected-character-chip b{display:grid;place-items:center;width:18px;height:18px;border-radius:50%;background:#e83f76;color:white;font-size:15px}
+
+
+/* Existing video import and local preview */
+.import-video-panel{margin-top:18px;padding:18px;border:1px solid #554477;border-radius:14px;background:#111321}
+.import-video-panel h3{margin:0 0 7px;color:#f5f1ff;font-size:16px}
+.import-video-panel p{margin:0 0 13px;color:#aaa5bd;font-size:12px;line-height:1.7}
+.import-video-button{display:inline-flex;align-items:center;justify-content:center;padding:11px 16px;border-radius:10px;background:#6e36bd;color:#fff;font-size:12px;font-weight:700;cursor:pointer}
+.import-video-button:hover{background:#8148d2}
+#existingVideoPreview{display:block;width:100%;max-height:480px;margin-top:14px;border-radius:12px;background:#05060a}
+#existingVideoPreview[hidden]{display:none}
+#existingVideoStatus:empty{display:none}
