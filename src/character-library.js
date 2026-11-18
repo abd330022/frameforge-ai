@@ -133,17 +133,24 @@ export function mountCharacterLibrary() {
     gallery.innerHTML = items.length ? items.map(p => {
       const isSelected = selected.includes(p.id), isFav = favorites.includes(p.id);
       return `<button type="button" class="character-tile ${isSelected?'selected':''}" data-id="${escapeHtml(p.id)}" aria-pressed="${isSelected}">
-        <span class="character-photo"><span class="portrait-sprite" role="img" aria-label="${escapeHtml(p.name)}" style="--portrait-position:${(p.slot%4)*33.333}% ${Math.floor(p.slot/4)*33.333}%"></span><span class="character-check">${isSelected?'✓':''}</span></span>
+        <span class="character-photo"><span class="portrait-sprite" role="img" aria-label="${escapeHtml(p.name)}" style="--portrait-position:${(p.slot%4)*33.333}% ${Math.floor(p.slot/4)*33.333}%"></span><span class="character-check">${isSelected?'−':'+'}</span></span>
         <span class="character-name">${escapeHtml(p.name)}</span>
         <span class="character-favorite" data-favorite="${escapeHtml(p.id)}" title="${isFav?t.unfavorite:t.favorite}">${isFav?'♥':'♡'}</span>
       </button>`;
     }).join('') : `<div class="character-empty">${t.empty}</div>`;
     const chosen = allPeople().filter(p => selected.includes(p.id));
-    section.querySelector('#characterSelectedSummary').innerHTML = `<strong>${t.selected}: ${chosen.length}</strong><span>${chosen.map(p=>escapeHtml(p.name)).join('، ')}</span>`;
+    section.querySelector('#characterSelectedSummary').innerHTML = `<strong>${t.selected}: ${chosen.length}</strong><div class="selected-character-chips">${chosen.map(p=>`<button type="button" class="selected-character-chip" data-remove-character="${escapeHtml(p.id)}" aria-label="${document.documentElement.lang==='ar'?'إزالة ':'Remove '}${escapeHtml(p.name)}"><span>${escapeHtml(p.name)}</span><b>−</b></button>`).join('')}</div>`;
     section.querySelector('#characterUseButton').disabled = !chosen.length;
   }
 
   section.querySelectorAll('.character-filter').forEach(btn => btn.addEventListener('click',() => { filter=btn.dataset.filter; renderGallery(); }));
+  section.querySelector('#characterSelectedSummary').addEventListener('click',event => {
+    const remove=event.target.closest('[data-remove-character]');
+    if (!remove) return;
+    selected=selected.filter(id=>id!==remove.dataset.removeCharacter);
+    localStorage.setItem(SELECTED_KEY,JSON.stringify(selected));
+    renderGallery();
+  });
   search.addEventListener('input',renderGallery);
   gallery.addEventListener('click',event => {
     const favorite = event.target.closest('[data-favorite]');
