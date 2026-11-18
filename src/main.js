@@ -30,6 +30,7 @@ async function loadWorkspaceVideo() {
 }
 
 import { mountCharacterLibrary } from './character-library.js'
+import { mountStoryPlanner } from './story-planner.js'
 
 const copy = {
   ar: {
@@ -189,6 +190,7 @@ function render() {
     <div class="toast" id="toast" role="status"></div>
   `
   mountCharacterLibrary()
+  mountStoryPlanner()
   document.querySelector('#langBtn').addEventListener('click', () => { lang = lang === 'ar' ? 'en' : 'ar'; render() })
   const voiceLanguage = document.querySelector('#voiceLanguage')
   const voiceAccent = document.querySelector('#voiceAccent')
