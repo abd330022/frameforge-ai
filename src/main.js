@@ -185,13 +185,48 @@ function render() {
       note.textContent=lang==='ar'?'ارفع صورة أولاً ثم احفظها.':'Upload an image first, then save it.'
     }
   })
-  document.querySelector('#generateBtn').addEventListener('click', () => {
+  document.querySelector('#generateBtn').addEventListener('click', async () => {
     const prompt = document.querySelector('#prompt').value.trim()
     const toast = document.querySelector('#toast')
-    const characterAudioMode = document.querySelector('#characterAudioMode').value
-    toast.textContent = prompt ? (characterAudioMode === 'off' ? (lang === 'ar' ? 'تم اختيار حركة فقط بدون كلام للشخصيات. المؤثرات الخارجية تبقى حسب إعداداتها. التوليد الحقيقي غير متاح حتى ربط المحرك.' : 'Motion only selected; characters will not speak. External effects remain controlled separately. Real generation is not connected yet.') : t('alertDemo')) : t('alertPrompt')
-    toast.classList.add('show')
-    setTimeout(() => toast.classList.remove('show'), 5500)
+    const button = document.querySelector('#generateBtn')
+    const showToast = message => {
+      toast.textContent = message
+      toast.classList.add('show')
+    }
+    if (!prompt) {
+      showToast(t('alertPrompt'))
+      return
+    }
+    button.disabled = true
+    button.style.opacity = '.65'
+    showToast(lang === 'ar' ? 'جارٍ إرسال طلبك إلى محرك الفيديو...' : 'Sending your request to the video engine...')
+    try {
+      const response = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt,
+          motion: document.querySelector('#motionPrompt').value.trim(),
+          mode,
+          imageData: selectedImageData,
+          duration: document.querySelector('#duration').value,
+          aspectRatio: document.querySelector('#ratio').value,
+          style: document.querySelector('#style').value
+        })
+      })
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.error || 'Generation request failed.')
+      showToast(lang === 'ar' ? 'تم إرسال الطلب إلى محرك الفيديو بنجاح.' : 'Your request was accepted by the video engine.')
+    } catch (error) {
+      showToast(lang === 'ar'
+        ? (error.message.includes('not connected') || error.message.includes('not configured')
+            ? 'واجهة الموقع أصبحت جاهزة للاتصال، لكن مزوّد توليد الفيديو لم يُربط بعد. لم يتم إنشاء فيديو ولم تُخصم أي أموال.'
+            : 'تعذّر إرسال الطلب: ' + error.message)
+        : error.message)
+    } finally {
+      button.disabled = false
+      button.style.opacity = '1'
+    }
   })
 }
 render()
