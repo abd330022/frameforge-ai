@@ -1,4 +1,34 @@
 import './style.css'
+
+const VIDEO_DB_NAME = 'frameforge-workspace'
+const VIDEO_STORE_NAME = 'videos'
+function openVideoDatabase() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(VIDEO_DB_NAME, 1)
+    request.onupgradeneeded = () => request.result.createObjectStore(VIDEO_STORE_NAME)
+    request.onsuccess = () => resolve(request.result)
+    request.onerror = () => reject(request.error)
+  })
+}
+async function saveWorkspaceVideo(file) {
+  const db = await openVideoDatabase()
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(VIDEO_STORE_NAME, 'readwrite')
+    tx.objectStore(VIDEO_STORE_NAME).put({ blob: file, name: file.name, type: file.type, savedAt: Date.now() }, 'latest')
+    tx.oncomplete = () => { db.close(); resolve() }
+    tx.onerror = () => { db.close(); reject(tx.error) }
+  })
+}
+async function loadWorkspaceVideo() {
+  const db = await openVideoDatabase()
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(VIDEO_STORE_NAME, 'readonly')
+    const request = tx.objectStore(VIDEO_STORE_NAME).get('latest')
+    request.onsuccess = () => { db.close(); resolve(request.result || null) }
+    request.onerror = () => { db.close(); reject(request.error) }
+  })
+}
+
 import { mountCharacterLibrary } from './character-library.js'
 
 const copy = {
@@ -136,6 +166,7 @@ function render() {
             <label class="import-video-button" for="existingVideoInput">${lang === 'ar' ? 'اختيار فيديو من الجهاز' : 'Choose video from device'}</label>
             <input id="existingVideoInput" type="file" accept="video/mp4,video/webm,video/quicktime" hidden>
             <div id="existingVideoStatus" class="notice"></div>
+            <button id="saveExistingVideo" class="save-video-button" type="button" hidden>حفظ الفيديو في مشاريعي على هذا الجهاز</button>
             <video id="existingVideoPreview" controls playsinline hidden></video>
           </div>
         </div>
@@ -194,21 +225,36 @@ function render() {
     }
   })
   let importedVideoUrl = null
-  document.querySelector('#existingVideoInput').addEventListener('change', event => {
-    const file = event.target.files && event.target.files[0]
-    const status = document.querySelector('#existingVideoStatus')
-    const preview = document.querySelector('#existingVideoPreview')
-    if (!file) return
-    if (!file.type.startsWith('video/')) {
-      status.textContent = lang === 'ar' ? 'الملف المحدد ليس فيديو.' : 'The selected file is not a video.'
-      return
-    }
+  const videoInput = document.querySelector('#existingVideoInput')
+  const videoPreview = document.querySelector('#existingVideoPreview')
+  const videoStatus = document.querySelector('#existingVideoStatus')
+  const saveVideoButton = document.querySelector('#saveExistingVideo')
+  const showWorkspaceVideo = (blob, name) => {
     if (importedVideoUrl) URL.revokeObjectURL(importedVideoUrl)
-    importedVideoUrl = URL.createObjectURL(file)
-    preview.src = importedVideoUrl
-    preview.hidden = false
-    status.textContent = (lang === 'ar' ? 'تم تحميل الفيديو للمعاينة: ' : 'Video ready to preview: ') + file.name
+    importedVideoUrl = URL.createObjectURL(blob)
+    videoPreview.src = importedVideoUrl
+    videoPreview.hidden = false
+    saveVideoButton.hidden = false
+    videoStatus.textContent = 'الفيديو جاهز: ' + name
+  }
+  videoInput.addEventListener('change', event => {
+    const file = event.target.files && event.target.files[0]
+    if (!file) return
+    if (!file.type.startsWith('video/')) { videoStatus.textContent = 'الملف المحدد ليس فيديو.'; return }
+    showWorkspaceVideo(file, file.name)
   })
+  saveVideoButton.addEventListener('click', async () => {
+    saveVideoButton.disabled = true
+    try {
+      const file = videoInput.files && videoInput.files[0]
+      if (!file) throw new Error('NO_VIDEO')
+      await saveWorkspaceVideo(file)
+      videoStatus.textContent = 'تم حفظ الفيديو في مشاريعي على هذا الجهاز.'
+    } catch (error) {
+      videoStatus.textContent = 'تعذّر الحفظ. قد تكون مساحة التخزين غير كافية.'
+    } finally { saveVideoButton.disabled = false }
+  })
+  loadWorkspaceVideo().then(saved => { if (saved && saved.blob) showWorkspaceVideo(saved.blob, saved.name || 'saved-video') }).catch(() => {})
   document.querySelector('#generateBtn').addEventListener('click', async () => {
     const prompt = document.querySelector('#prompt').value.trim()
     const toast = document.querySelector('#toast')
