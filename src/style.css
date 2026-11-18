@@ -54,3 +54,19 @@
 /* AI-generated portrait contact sheet: fixed sprite crop for each built-in character */
 .character-photo .portrait-sprite{position:absolute;inset:0;display:block;background-image:var(--portrait-sprite);background-size:400% 400%;background-position:var(--portrait-position);background-repeat:no-repeat;transform:scale(1.02)}
 .character-photo img{display:none}
+
+/* Persistent workspace navigation matching the requested studio layout */
+.side-nav{position:fixed;z-index:30;top:0;right:0;bottom:0;width:248px;padding:26px 18px 18px;background:rgba(13,14,27,.97);border-left:1px solid var(--line);display:flex;flex-direction:column;gap:28px;backdrop-filter:blur(18px)}
+.side-brand{font-size:17px;padding:0 8px}
+.side-caption{padding:0 12px;color:#77788f;font-size:10px;letter-spacing:1.5px;font-weight:700}
+.side-links,.side-bottom{display:flex;flex-direction:column;gap:7px}
+.side-links a,.side-bottom a{display:flex;align-items:center;gap:12px;padding:13px 14px;border-radius:11px;color:#aeadc0;font-size:13px;transition:.2s}
+.side-links a:hover,.side-bottom a:hover,.side-links a.side-active{background:#28213f;color:#d8ceff}
+.side-links a.side-active{box-shadow:inset -3px 0 #a995ff}
+.side-bottom{margin-top:auto;border-top:1px solid var(--line);padding-top:16px}
+html[dir="rtl"] body{margin-right:248px}
+html[dir="ltr"] body{margin-right:0;margin-left:248px}
+.field-explainer{margin:8px 2px 18px;color:#a9a5bf;font-size:12px;line-height:1.8}
+#characterLibrary{scroll-margin-top:24px}
+@media(max-width:850px){.side-nav{width:76px;padding:18px 8px}.side-brand span:last-child,.side-caption,.side-links a:not(.side-active),.side-bottom a{font-size:0}.side-links a,.side-bottom a{justify-content:center;padding:14px 4px}.side-links a span{font-size:19px}html[dir="rtl"] body{margin-right:76px}html[dir="ltr"] body{margin-left:76px}}
+@media(max-width:560px){.side-nav{width:58px}.side-brand .brand-mark{width:34px;height:34px}.side-links a,.side-bottom a{font-size:0}html[dir="rtl"] body{margin-right:58px}html[dir="ltr"] body{margin-left:58px}}
