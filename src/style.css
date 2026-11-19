@@ -123,3 +123,13 @@ html[dir="ltr"] body{margin-right:0;margin-left:248px}
 #hfConnectedAccount[hidden],.hf-disconnect-btn[hidden],.hf-connect-btn[hidden]{display:none}
 #hfConnectStatus{grid-column:1/-1;margin:0;text-align:start}
 @media(max-width:760px){.hf-connect-card{grid-template-columns:1fr;padding:15px}.hf-connect-actions{width:100%}.hf-connect-btn,.hf-disconnect-btn{flex:1}}
+
+/* Hugging Face shared video generation */
+.hf-video-consent{display:flex;align-items:flex-start;gap:10px;margin:15px 0 8px;padding:13px 15px;border:1px solid #4d4567;border-radius:11px;background:#111321;color:#d4d0e0;font-size:12px;line-height:1.75;cursor:pointer}
+.hf-video-consent input{margin-top:4px;accent-color:#a995ff;flex:0 0 auto}
+.hf-video-disclosure{margin:0 2px 15px;color:#9a96ac;font-size:11px;line-height:1.7}
+.generated-video-panel{margin-top:18px;padding:17px;border:1px solid #665486;border-radius:14px;background:#10121e}
+.generated-video-panel[hidden]{display:none}
+.generated-video-panel h3{margin:0 0 12px;color:#f5f1ff;font-size:16px}
+#generatedVideo{display:block;width:100%;max-height:520px;border-radius:10px;background:#05060a}
+.generated-video-link{display:inline-flex;margin-top:12px;padding:10px 14px;border:1px solid #7662a0;border-radius:9px;background:#211c32;color:#e7dcff;font-size:12px}
