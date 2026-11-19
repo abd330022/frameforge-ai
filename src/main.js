@@ -31,10 +31,11 @@ async function loadWorkspaceVideo() {
 
 import { mountCharacterLibrary } from './character-library.js'
 import { mountStoryPlanner } from './story-planner.js'
+import { mountHuggingFaceConnect } from './huggingface-auth.js'
 
 const copy = {
   ar: {
-    navCreate: 'إنشاء فيديو', navExplore: 'استكشف', signIn: 'تسجيل الدخول',
+    navCreate: 'إنشاء فيديو', navExplore: 'استكشف', signIn: 'ربط الحساب',
     badge: 'استوديو صناعة الفيديو بالذكاء الاصطناعي',
     titleA: 'حوّل خيالك', titleB: 'إلى مشهد ينبض بالحياة',
     subtitle: 'ابدأ بفكرة أو صورة أو قصة. اصنع فيديوهاتك الإبداعية من مكان واحد.',
@@ -54,12 +55,12 @@ const copy = {
     generate: 'إنشاء الفيديو', free: 'تجربة الواجهة — بدون تكلفة',
     ideas: 'أفكار تلهمك', idea1: 'مدينة مستقبلية تحت المطر', idea2: 'مغامرة كرتونية في الغابة', idea3: 'إعلان سينمائي لمنتجك',
     how: 'من الفكرة إلى الفيديو بثلاث خطوات', step1: 'اكتب فكرتك', step1d: 'صف المشهد الذي تريد رؤيته ببساطة.', step2: 'اختر أسلوبك', step2d: 'حدد النمط والمدة والأبعاد المناسبة.', step3: 'أنشئ وشارك', step3d: 'راجع النتيجة وجهّزها للمشاركة.',
-    footer: 'مساحة إبداعك تبدأ من هنا.', demoTitle: 'واجهة تجريبية', demoText: 'تم تجهيز واجهة FrameForge AI. ربط محرك توليد الفيديو الحقيقي سيكون الخطوة التالية، وقد يتطلب مفتاح API من مزوّد خارجي.',
-    alertPrompt: 'اكتب وصفاً للفيديو أولاً.', alertDemo: 'هذه نسخة تجريبية للواجهة فقط. لم يتم إنشاء فيديو فعلي بعد؛ نحتاج إلى ربط خدمة توليد فيديو.',
+    footer: 'مساحة إبداعك تبدأ من هنا.', demoTitle: 'واجهة تجريبية', demoText: 'ميزة ربط حساب Hugging Face متاحة. محرك توليد الفيديو المجاني لم يُربط بعد، لذلك زر الإنشاء لا يولّد فيديو حتى ربط المحرك.',
+    alertPrompt: 'اكتب وصفاً للفيديو أولاً.', alertDemo: 'لم يتم إنشاء فيديو بعد. ربط حساب Hugging Face وحده لا يكفي؛ ما زال محرك الفيديو المجاني بحاجة إلى الربط.',
     language: 'English'
   },
   en: {
-    navCreate: 'Create video', navExplore: 'Explore', signIn: 'Sign in',
+    navCreate: 'Create video', navExplore: 'Explore', signIn: 'Connect account',
     badge: 'AI video creation studio',
     titleA: 'Turn your imagination', titleB: 'into a living scene',
     subtitle: 'Start with an idea, an image, or a story. Create your videos in one place.',
@@ -79,8 +80,8 @@ const copy = {
     generate: 'Create video', free: 'Interface preview — no cost',
     ideas: 'Ideas to inspire you', idea1: 'A futuristic city in the rain', idea2: 'A cartoon adventure in the forest', idea3: 'A cinematic product commercial',
     how: 'From idea to video in three steps', step1: 'Write your idea', step1d: 'Describe the scene you want to see.', step2: 'Choose your style', step2d: 'Set the visual style, duration and ratio.', step3: 'Create and share', step3d: 'Review your result and get it ready to share.',
-    footer: 'Your creative space starts here.', demoTitle: 'Prototype interface', demoText: 'The FrameForge AI interface is ready. Connecting a real video-generation engine is the next step and may require an API key from an external provider.',
-    alertPrompt: 'Please describe your video first.', alertDemo: 'This is currently an interface prototype. No video has been generated yet; a video-generation service still needs to be connected.',
+    footer: 'Your creative space starts here.', demoTitle: 'Prototype interface', demoText: 'Hugging Face account sign-in is available. The free video engine is not connected yet, so video creation will not work until an engine is added.',
+    alertPrompt: 'Please describe your video first.', alertDemo: 'No video has been generated yet. Connecting a Hugging Face account is not enough; the free video engine still needs to be connected.',
     language: 'العربية'
   }
 }
@@ -100,7 +101,7 @@ function render() {
     <header class="topbar">
       <a class="brand" href="#" aria-label="FrameForge AI home"><span class="brand-mark">F</span><span>FrameForge <i>AI</i></span></a>
       <nav><a href="#create">${t('navCreate')}</a><a href="#how">${t('navExplore')}</a></nav>
-      <div class="top-actions"><button class="lang-btn" id="langBtn">${t('language')}</button><a class="signin" href="#create">${t('signIn')}</a></div>
+      <div class="top-actions"><button class="lang-btn" id="langBtn">${t('language')}</button><a class="signin" href="#huggingFaceConnect">${t('signIn')}</a></div>
     </header>
     <main>
       <section class="hero" id="home">
@@ -159,6 +160,19 @@ function render() {
             <div class="setting"><label for="style">${t('style')}</label><select id="style"><option>${t('cinematic')}</option><option>${t('realistic')}</option><option>${t('anime')}</option><option>${t('cartoon')}</option></select></div>
             <div class="setting"><label for="ratio">${t('ratio')}</label><select id="ratio"><option>16:9</option><option>9:16</option><option>1:1</option></select></div>
           </div>
+          <section class="hf-connect-card" id="huggingFaceConnect" aria-labelledby="hfConnectTitle">
+            <div class="hf-connect-copy">
+              <span class="hf-connect-kicker">HUGGING FACE</span>
+              <h3 id="hfConnectTitle">${lang === 'ar' ? 'اربط حسابك من داخل FrameForge' : 'Connect your account from FrameForge'}</h3>
+              <p>${lang === 'ar' ? 'سجّل الدخول في صفحة Hugging Face الرسمية ثم عد إلى الموقع. لا يشارك FrameForge كلمة مرورك. تبقى الجلسة في هذا التبويب. ربط الحساب وحده لا يفعّل توليد الفيديو بعد.' : 'Sign in on the official Hugging Face page, then return here. FrameForge never receives your password. Your session stays in this browser tab. Account sign-in alone does not enable video generation yet.'}</p>
+            </div>
+            <div class="hf-connect-actions">
+              <button class="hf-connect-btn" id="hfConnectBtn" type="button">${lang === 'ar' ? '🤗 ربط حساب Hugging Face' : '🤗 Connect Hugging Face'}</button>
+              <button class="hf-disconnect-btn" id="hfDisconnectBtn" type="button" hidden>${lang === 'ar' ? 'فصل الحساب' : 'Disconnect'}</button>
+            </div>
+            <span id="hfConnectedAccount" hidden></span>
+            <p class="notice" id="hfConnectStatus" role="status" aria-live="polite"></p>
+          </section>
           <button class="generate-btn" id="generateBtn"><span>✦</span>${t('generate')} <b>↗</b></button>
           <p class="notice" id="notice">✧ ${t('demoText')}</p>
           <div class="import-video-panel">
@@ -191,6 +205,7 @@ function render() {
   `
   mountCharacterLibrary()
   mountStoryPlanner()
+  mountHuggingFaceConnect(lang)
   document.querySelector('#langBtn').addEventListener('click', () => { lang = lang === 'ar' ? 'en' : 'ar'; render() })
   const voiceLanguage = document.querySelector('#voiceLanguage')
   const voiceAccent = document.querySelector('#voiceAccent')
