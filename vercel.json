@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/.well-known/oauth-cimd",
+      "destination": "/api/oauth-cimd"
+    }
+  ]
+}
