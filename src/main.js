@@ -56,7 +56,7 @@ const copy = {
     generate: 'إنشاء الفيديو', free: 'تجربة مجانية — تستخدم حصة Hugging Face',
     ideas: 'أفكار تلهمك', idea1: 'مدينة مستقبلية تحت المطر', idea2: 'مغامرة كرتونية في الغابة', idea3: 'إعلان سينمائي لمنتجك',
     how: 'من الفكرة إلى الفيديو بثلاث خطوات', step1: 'اكتب فكرتك', step1d: 'صف المشهد الذي تريد رؤيته ببساطة.', step2: 'اختر أسلوبك', step2d: 'حدد النمط والمدة والأبعاد المناسبة.', step3: 'أنشئ وشارك', step3d: 'راجع النتيجة وجهّزها للمشاركة.',
-    footer: 'مساحة إبداعك تبدأ من هنا.', demoTitle: 'واجهة تجريبية', demoText: 'يُرسل وصفك والصورة التي تختارها إلى مساحة عامة على Hugging Face لإنشاء مقطع يقارب 3 ثوانٍ. التوليد يستهلك من حصة ZeroGPU لحسابك.',
+    footer: 'مساحة إبداعك تبدأ من هنا.', demoTitle: 'واجهة تجريبية', demoText: 'يُرسل وصفك والصورة التي تختارها إلى مساحة عامة على Hugging Face لإنشاء مقطع يقارب ثانيتين. التوليد يستهلك من حصة ZeroGPU لحسابك.',
     alertPrompt: 'اكتب وصفاً للفيديو أولاً.', alertDemo: 'تعذّر إنشاء الفيديو. قد تكون مساحة التوليد مشغولة أو انتهت حصة ZeroGPU اليومية. حاول لاحقاً.',
     language: 'English'
   },
@@ -81,7 +81,7 @@ const copy = {
     generate: 'Create video', free: 'Free trial — uses Hugging Face quota',
     ideas: 'Ideas to inspire you', idea1: 'A futuristic city in the rain', idea2: 'A cartoon adventure in the forest', idea3: 'A cinematic product commercial',
     how: 'From idea to video in three steps', step1: 'Write your idea', step1d: 'Describe the scene you want to see.', step2: 'Choose your style', step2d: 'Set the visual style, duration and ratio.', step3: 'Create and share', step3d: 'Review your result and get it ready to share.',
-    footer: 'Your creative space starts here.', demoTitle: 'Prototype interface', demoText: 'Your prompt and selected image are sent to a public Hugging Face Space to create a video around 3 seconds long. Generation uses your account’s ZeroGPU quota.',
+    footer: 'Your creative space starts here.', demoTitle: 'Prototype interface', demoText: 'Your prompt and selected image are sent to a public Hugging Face Space to create a video around 2 seconds long. Generation uses your account’s ZeroGPU quota.',
     alertPrompt: 'Please describe your video first.', alertDemo: 'Video generation failed. The shared Space may be busy or your daily ZeroGPU quota may be used up. Please try again later.',
     language: 'العربية'
   }
@@ -92,8 +92,8 @@ let mode = 'text'
 let selectedImage = null
 let selectedImageData = null
 const t = key => copy[lang][key]
-const VIDEO_SPACE = 'OpenKing/wan2-video-generation';
-const VIDEO_SPACE_URL = 'https://openking-wan2-video-generation.hf.space';
+const VIDEO_SPACE = 'Upsampler/wan-2-2-5b-video';
+const VIDEO_SPACE_URL = 'https://upsampler-wan-2-2-5b-video.hf.space';
 function getVideoFileUrl(output) {
   const candidate = output?.video?.url || output?.url || output?.video?.path || output?.path || output?.video || output;
   if (typeof candidate !== 'string' || !candidate) return null;
@@ -168,7 +168,7 @@ function render() {
             <p class="notice">${t('characterNote')}</p>
           </div>
           <div class="settings-grid">
-            <div class="setting"><label for="duration">${t('duration')}</label><select id="duration"><option value="3">3 ${t('seconds')}</option></select></div>
+            <div class="setting"><label for="duration">${t('duration')}</label><select id="duration"><option value="2">2 ${t('seconds')}</option></select></div>
             <div class="setting"><label for="style">${t('style')}</label><select id="style"><option value="cinematic">${t('cinematic')}</option><option value="realistic">${t('realistic')}</option><option value="anime">${t('anime')}</option><option value="cartoon">${t('cartoon')}</option></select></div>
             <div class="setting"><label for="ratio">${t('ratio')}</label><select id="ratio"><option>16:9</option><option>9:16</option><option>1:1</option></select></div>
           </div>
@@ -176,7 +176,7 @@ function render() {
             <div class="hf-connect-copy">
               <span class="hf-connect-kicker">HUGGING FACE</span>
               <h3 id="hfConnectTitle">${lang === 'ar' ? 'اربط حسابك من داخل FrameForge' : 'Connect your account from FrameForge'}</h3>
-              <p>${lang === 'ar' ? 'تسجيل الدخول يتم لدى Hugging Face. قبل كل إنشاء، اختر الموافقة على إرسال وصفك والصورة إلى مساحة توليد عامة هناك. تُستخدم حصة ZeroGPU الخاصة بحسابك، وقد يتغير وقت الانتظار أو توفر المساحة.' : 'Sign-in happens on Hugging Face. Before each generation, choose to send your prompt and image to a public generation Space there. Your account’s ZeroGPU quota is used, and wait times or availability may change.'}</p>
+              <p>${lang === 'ar' ? 'تسجيل الدخول يتم لدى Hugging Face. قبل كل إنشاء، اختر الموافقة على إرسال الوصف والصورة ورمز وصول Hugging Face إلى مساحة عامة لتوليد الفيديو وربط الاستخدام بحسابك. تُستخدم حصة ZeroGPU، وقد يتغير وقت الانتظار أو توفر المساحة.' : 'Sign-in happens on Hugging Face. Before each generation, choose to send your prompt, image, and Hugging Face access token to a public generation Space to associate usage with your account. Your ZeroGPU quota is used, and wait times or availability may change.'}</p>
             </div>
             <div class="hf-connect-actions">
               <button class="hf-connect-btn" id="hfConnectBtn" type="button">${lang === 'ar' ? '🤗 ربط حساب Hugging Face' : '🤗 Connect Hugging Face'}</button>
@@ -187,9 +187,9 @@ function render() {
           </section>
           <label class="hf-video-consent">
             <input id="hfVideoConsent" type="checkbox" />
-            <span>${lang === 'ar' ? 'أوافق على إرسال وصفي والصورة (إن وُجدت) إلى مساحة عامة على Hugging Face لإنشاء الفيديو. تُستخدم حصة حسابي، وقد تُطبق رسوم Hugging Face إذا كان حسابي يستخدم أرصدة مدفوعة بعد نفاد حصته.' : 'I agree to send my prompt and image, if any, to a public Hugging Face Space to create the video. This uses my account quota; Hugging Face may charge paid credits if my account uses them after its included quota is used.'}</span>
+            <span>${lang === 'ar' ? 'أوافق على إرسال وصفي والصورة (إن وُجدت) ورمز وصول Hugging Face إلى مساحة توليد عامة لإنشاء الفيديو وربط الاستخدام بحصة حسابي. قد تُستخدم أرصدة مدفوعة إذا انتهت الحصة المجانية.' : 'I agree to send my prompt, image (if any), and Hugging Face access token to a public generation Space to create the video and associate usage with my account quota. Paid Hugging Face credits may be used after the free quota is exhausted.'}</span>
           </label>
-          <p class="hf-video-disclosure">${lang === 'ar' ? 'المحرك الحالي ينشئ مقطعاً واحداً مدته نحو 3 ثوانٍ. قد يستغرق التوليد والانتظار عدة دقائق.' : 'The current engine creates one video around 3 seconds long. Generation and queueing can take several minutes.'}</p>
+          <p class="hf-video-disclosure">${lang === 'ar' ? 'المحرك الحالي ينشئ مقطعاً واحداً مدته نحو ثانيتين. قد يستغرق التوليد والانتظار عدة دقائق.' : 'The current engine creates one video around 2 seconds long. Generation and queueing can take several minutes.'}</p>
           <button class="generate-btn" id="generateBtn"><span>✦</span>${t('generate')} <b>↗</b></button>
           <p class="notice" id="notice">✧ ${t('demoText')}</p>
           <div class="generated-video-panel" id="generatedVideoPanel" hidden>
@@ -357,20 +357,24 @@ function render() {
         ? handle_file(await (await fetch(selectedImageData)).blob())
         : null
       const ratios = {
-        '16:9': [1280, 704],
-        '9:16': [704, 1280],
-        '1:1': [704, 704]
+        '16:9': [1024, 576],
+        '9:16': [576, 1024],
+        '1:1': [896, 896]
       }
       const [width, height] = ratios[document.querySelector('#ratio').value] || ratios['16:9']
+      const negativePrompt = 'Bright tones, overexposed, static, blurred details, subtitles, low quality, deformed faces or hands, watermark, text, signature'
+      const durationSeconds = Number(document.querySelector('#duration').value) || 2
       const submission = client.submit('/generate_video', [
-        fullPrompt,
         image,
-        width,
+        fullPrompt,
         height,
-        73,
-        20,
-        5.0,
-        -1
+        width,
+        negativePrompt,
+        durationSeconds,
+        0,
+        4,
+        Math.floor(Math.random() * 2147483647),
+        true
       ])
       let resultData = null
       for await (const event of submission) {
