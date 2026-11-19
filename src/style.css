@@ -106,3 +106,20 @@ html[dir="ltr"] body{margin-right:0;margin-left:248px}
 .storyboard-character small,.storyboard-scene small{color:var(--muted,#9aa8bd);line-height:1.6}
 .storyboard-scene-top{display:flex;justify-content:space-between;gap:12px;align-items:center}
 .storyboard-scene-top span{font-size:12px;color:var(--muted,#9aa8bd);white-space:nowrap}
+
+/* Hugging Face account connection */
+.hf-connect-card{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px;margin:16px 0;padding:17px 19px;border:1px solid #4e466b;border-radius:13px;background:linear-gradient(135deg,#171626,#111421)}
+.hf-connect-copy{min-width:0}
+.hf-connect-copy h3{margin:5px 0 7px;color:#f6f3ff;font-size:16px}
+.hf-connect-copy p{margin:0;color:#aaa6bd;font-size:12px;line-height:1.8}
+.hf-connect-kicker{color:#c1b0ff;font-size:10px;font-weight:800;letter-spacing:1.1px}
+.hf-connect-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.hf-connect-btn,.hf-disconnect-btn{min-height:42px;padding:11px 15px;border-radius:10px;font-size:12px;font-weight:750;cursor:pointer}
+.hf-connect-btn{border:1px solid #f6cf79;background:#f7cf75;color:#201b10}
+.hf-connect-btn:hover{background:#ffdc91}
+.hf-disconnect-btn{border:1px solid #544b69;background:#211d30;color:#e5dff4}
+.hf-connect-btn:disabled{opacity:.6;cursor:wait}
+#hfConnectedAccount{grid-column:1/-1;color:#d5c6ff;font-size:12px;font-weight:700}
+#hfConnectedAccount[hidden],.hf-disconnect-btn[hidden],.hf-connect-btn[hidden]{display:none}
+#hfConnectStatus{grid-column:1/-1;margin:0;text-align:start}
+@media(max-width:760px){.hf-connect-card{grid-template-columns:1fr;padding:15px}.hf-connect-actions{width:100%}.hf-connect-btn,.hf-disconnect-btn{flex:1}}
