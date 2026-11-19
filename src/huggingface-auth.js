@@ -8,6 +8,7 @@ const VERIFIER_KEY = 'frameforge-hf-oauth-verifier';
 
 let currentAccount = null;
 let callbackPromise = null;
+let profileCheckInProgress = false;
 
 function base64Url(bytes) {
   return btoa(String.fromCharCode(...bytes))
@@ -58,14 +59,15 @@ async function finishOAuthCallback() {
   sessionStorage.removeItem(STATE_KEY);
   sessionStorage.removeItem(VERIFIER_KEY);
 
+  if (!returnedState || returnedState !== expectedState) {
+    throw new Error('OAuth state check failed');
+  }
   if (providerError) {
     const error = new Error('Authorization was not completed');
     error.code = providerError;
     throw error;
   }
-  if (!returnedState || returnedState !== expectedState || !verifier) {
-    throw new Error('OAuth state check failed');
-  }
+  if (!verifier) throw new Error('OAuth code verifier is missing');
 
   const body = new URLSearchParams({
     grant_type: 'authorization_code',
@@ -101,6 +103,8 @@ export function mountHuggingFaceConnect(lang = 'ar') {
   const status = document.querySelector('#hfConnectStatus');
   const account = document.querySelector('#hfConnectedAccount');
   if (!connectButton || !disconnectButton || !status || !account) return;
+  const callbackParams = new URLSearchParams(window.location.search);
+  const isOAuthReturn = callbackParams.has('code') || callbackParams.has('error');
 
   const showConnected = username => {
     currentAccount = username;
@@ -176,7 +180,8 @@ export function mountHuggingFaceConnect(lang = 'ar') {
   }
 
   const accessToken = sessionStorage.getItem(TOKEN_KEY);
-  if (accessToken && !currentAccount) {
+  if (accessToken && !isOAuthReturn && !profileCheckInProgress) {
+    profileCheckInProgress = true;
     fetchProfile(accessToken).then(username => {
       sessionStorage.setItem(USER_KEY, username);
       showConnected(username);
@@ -184,10 +189,13 @@ export function mountHuggingFaceConnect(lang = 'ar') {
       if (error.status === 401 || error.status === 403) {
         sessionStorage.removeItem(TOKEN_KEY);
         sessionStorage.removeItem(USER_KEY);
+        currentAccount = null;
         showDisconnected(localizedText(lang, 'انتهت الجلسة. أعد ربط الحساب.', 'Session expired. Please reconnect your account.'));
       } else {
         status.textContent = localizedText(lang, 'تعذّر التحقق من الحساب حالياً. جرّب تحديث الصفحة.', 'Could not verify the account right now. Try refreshing the page.');
       }
+    }).finally(() => {
+      profileCheckInProgress = false;
     });
   }
 }
