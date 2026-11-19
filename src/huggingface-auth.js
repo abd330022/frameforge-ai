@@ -6,6 +6,10 @@ const USER_KEY = 'frameforge-hf-username';
 const STATE_KEY = 'frameforge-hf-oauth-state';
 const VERIFIER_KEY = 'frameforge-hf-oauth-verifier';
 
+export function getHuggingFaceAccessToken() {
+  return typeof window !== 'undefined' ? window.sessionStorage.getItem(TOKEN_KEY) : null;
+}
+
 let currentAccount = null;
 let callbackPromise = null;
 let profileCheckInProgress = false;
