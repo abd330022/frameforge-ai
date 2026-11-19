@@ -31,7 +31,8 @@ async function loadWorkspaceVideo() {
 
 import { mountCharacterLibrary } from './character-library.js'
 import { mountStoryPlanner } from './story-planner.js'
-import { mountHuggingFaceConnect } from './huggingface-auth.js'
+import { Client, handle_file } from '@gradio/client'
+import { mountHuggingFaceConnect, getHuggingFaceAccessToken } from './huggingface-auth.js'
 
 const copy = {
   ar: {
@@ -52,11 +53,11 @@ const copy = {
     characterNote: 'إعدادات الصوت هنا لتجهيز اختياراتك؛ تشغيل الأصوات وتوليدها يحتاجان إلى ربط محرك صوت.',
     duration: 'المدة', style: 'النمط البصري', ratio: 'الأبعاد',
     seconds: 'ثوانٍ', cinematic: 'سينمائي', anime: 'أنمي', realistic: 'واقعي', cartoon: 'كرتوني',
-    generate: 'إنشاء الفيديو', free: 'تجربة الواجهة — بدون تكلفة',
+    generate: 'إنشاء الفيديو', free: 'تجربة مجانية — تستخدم حصة Hugging Face',
     ideas: 'أفكار تلهمك', idea1: 'مدينة مستقبلية تحت المطر', idea2: 'مغامرة كرتونية في الغابة', idea3: 'إعلان سينمائي لمنتجك',
     how: 'من الفكرة إلى الفيديو بثلاث خطوات', step1: 'اكتب فكرتك', step1d: 'صف المشهد الذي تريد رؤيته ببساطة.', step2: 'اختر أسلوبك', step2d: 'حدد النمط والمدة والأبعاد المناسبة.', step3: 'أنشئ وشارك', step3d: 'راجع النتيجة وجهّزها للمشاركة.',
-    footer: 'مساحة إبداعك تبدأ من هنا.', demoTitle: 'واجهة تجريبية', demoText: 'ميزة ربط حساب Hugging Face متاحة. محرك توليد الفيديو المجاني لم يُربط بعد، لذلك زر الإنشاء لا يولّد فيديو حتى ربط المحرك.',
-    alertPrompt: 'اكتب وصفاً للفيديو أولاً.', alertDemo: 'لم يتم إنشاء فيديو بعد. ربط حساب Hugging Face وحده لا يكفي؛ ما زال محرك الفيديو المجاني بحاجة إلى الربط.',
+    footer: 'مساحة إبداعك تبدأ من هنا.', demoTitle: 'واجهة تجريبية', demoText: 'يُرسل وصفك والصورة التي تختارها إلى مساحة عامة على Hugging Face لإنشاء مقطع يقارب 3 ثوانٍ. التوليد يستهلك من حصة ZeroGPU لحسابك.',
+    alertPrompt: 'اكتب وصفاً للفيديو أولاً.', alertDemo: 'تعذّر إنشاء الفيديو. قد تكون مساحة التوليد مشغولة أو انتهت حصة ZeroGPU اليومية. حاول لاحقاً.',
     language: 'English'
   },
   en: {
@@ -77,11 +78,11 @@ const copy = {
     characterNote: 'These voice settings prepare your choices; playing and generating audio requires a connected audio engine.',
     duration: 'Duration', style: 'Visual style', ratio: 'Aspect ratio',
     seconds: 'seconds', cinematic: 'Cinematic', anime: 'Anime', realistic: 'Realistic', cartoon: 'Cartoon',
-    generate: 'Create video', free: 'Interface preview — no cost',
+    generate: 'Create video', free: 'Free trial — uses Hugging Face quota',
     ideas: 'Ideas to inspire you', idea1: 'A futuristic city in the rain', idea2: 'A cartoon adventure in the forest', idea3: 'A cinematic product commercial',
     how: 'From idea to video in three steps', step1: 'Write your idea', step1d: 'Describe the scene you want to see.', step2: 'Choose your style', step2d: 'Set the visual style, duration and ratio.', step3: 'Create and share', step3d: 'Review your result and get it ready to share.',
-    footer: 'Your creative space starts here.', demoTitle: 'Prototype interface', demoText: 'Hugging Face account sign-in is available. The free video engine is not connected yet, so video creation will not work until an engine is added.',
-    alertPrompt: 'Please describe your video first.', alertDemo: 'No video has been generated yet. Connecting a Hugging Face account is not enough; the free video engine still needs to be connected.',
+    footer: 'Your creative space starts here.', demoTitle: 'Prototype interface', demoText: 'Your prompt and selected image are sent to a public Hugging Face Space to create a video around 3 seconds long. Generation uses your account’s ZeroGPU quota.',
+    alertPrompt: 'Please describe your video first.', alertDemo: 'Video generation failed. The shared Space may be busy or your daily ZeroGPU quota may be used up. Please try again later.',
     language: 'العربية'
   }
 }
@@ -91,6 +92,17 @@ let mode = 'text'
 let selectedImage = null
 let selectedImageData = null
 const t = key => copy[lang][key]
+const VIDEO_SPACE = 'OpenKing/wan2-video-generation';
+const VIDEO_SPACE_URL = 'https://openking-wan2-video-generation.hf.space';
+function getVideoFileUrl(output) {
+  const candidate = output?.video?.url || output?.url || output?.video?.path || output?.path || output?.video || output;
+  if (typeof candidate !== 'string' || !candidate) return null;
+  if (/^(https?:|blob:|data:)/i.test(candidate)) return candidate;
+  if (candidate.startsWith('/gradio_api/file=') || candidate.startsWith('/file=')) {
+    return new URL(candidate, VIDEO_SPACE_URL).toString();
+  }
+  return new URL('/gradio_api/file=' + encodeURIComponent(candidate), VIDEO_SPACE_URL).toString();
+}
 const app = document.querySelector('#app')
 
 function render() {
@@ -156,15 +168,15 @@ function render() {
             <p class="notice">${t('characterNote')}</p>
           </div>
           <div class="settings-grid">
-            <div class="setting"><label for="duration">${t('duration')}</label><select id="duration"><option>5 ${t('seconds')}</option><option>10 ${t('seconds')}</option><option>15 ${t('seconds')}</option></select></div>
-            <div class="setting"><label for="style">${t('style')}</label><select id="style"><option>${t('cinematic')}</option><option>${t('realistic')}</option><option>${t('anime')}</option><option>${t('cartoon')}</option></select></div>
+            <div class="setting"><label for="duration">${t('duration')}</label><select id="duration"><option value="3">3 ${t('seconds')}</option></select></div>
+            <div class="setting"><label for="style">${t('style')}</label><select id="style"><option value="cinematic">${t('cinematic')}</option><option value="realistic">${t('realistic')}</option><option value="anime">${t('anime')}</option><option value="cartoon">${t('cartoon')}</option></select></div>
             <div class="setting"><label for="ratio">${t('ratio')}</label><select id="ratio"><option>16:9</option><option>9:16</option><option>1:1</option></select></div>
           </div>
           <section class="hf-connect-card" id="huggingFaceConnect" aria-labelledby="hfConnectTitle">
             <div class="hf-connect-copy">
               <span class="hf-connect-kicker">HUGGING FACE</span>
               <h3 id="hfConnectTitle">${lang === 'ar' ? 'اربط حسابك من داخل FrameForge' : 'Connect your account from FrameForge'}</h3>
-              <p>${lang === 'ar' ? 'سجّل الدخول في صفحة Hugging Face الرسمية ثم عد إلى الموقع. لا يشارك FrameForge كلمة مرورك. تبقى الجلسة في هذا التبويب. ربط الحساب وحده لا يفعّل توليد الفيديو بعد.' : 'Sign in on the official Hugging Face page, then return here. FrameForge never receives your password. Your session stays in this browser tab. Account sign-in alone does not enable video generation yet.'}</p>
+              <p>${lang === 'ar' ? 'تسجيل الدخول يتم لدى Hugging Face. قبل كل إنشاء، اختر الموافقة على إرسال وصفك والصورة إلى مساحة توليد عامة هناك. تُستخدم حصة ZeroGPU الخاصة بحسابك، وقد يتغير وقت الانتظار أو توفر المساحة.' : 'Sign-in happens on Hugging Face. Before each generation, choose to send your prompt and image to a public generation Space there. Your account’s ZeroGPU quota is used, and wait times or availability may change.'}</p>
             </div>
             <div class="hf-connect-actions">
               <button class="hf-connect-btn" id="hfConnectBtn" type="button">${lang === 'ar' ? '🤗 ربط حساب Hugging Face' : '🤗 Connect Hugging Face'}</button>
@@ -173,8 +185,19 @@ function render() {
             <span id="hfConnectedAccount" hidden></span>
             <p class="notice" id="hfConnectStatus" role="status" aria-live="polite"></p>
           </section>
+          <label class="hf-video-consent">
+            <input id="hfVideoConsent" type="checkbox" />
+            <span>${lang === 'ar' ? 'أوافق على إرسال وصفي والصورة (إن وُجدت) إلى مساحة عامة على Hugging Face لإنشاء الفيديو. تُستخدم حصة حسابي، وقد تُطبق رسوم Hugging Face إذا كان حسابي يستخدم أرصدة مدفوعة بعد نفاد حصته.' : 'I agree to send my prompt and image, if any, to a public Hugging Face Space to create the video. This uses my account quota; Hugging Face may charge paid credits if my account uses them after its included quota is used.'}</span>
+          </label>
+          <p class="hf-video-disclosure">${lang === 'ar' ? 'المحرك الحالي ينشئ مقطعاً واحداً مدته نحو 3 ثوانٍ. قد يستغرق التوليد والانتظار عدة دقائق.' : 'The current engine creates one video around 3 seconds long. Generation and queueing can take several minutes.'}</p>
           <button class="generate-btn" id="generateBtn"><span>✦</span>${t('generate')} <b>↗</b></button>
           <p class="notice" id="notice">✧ ${t('demoText')}</p>
+          <div class="generated-video-panel" id="generatedVideoPanel" hidden>
+            <h3>${lang === 'ar' ? 'الفيديو الذي أنشأته' : 'Your generated video'}</h3>
+            <video id="generatedVideo" controls playsinline></video>
+            <a class="generated-video-link" id="generatedVideoLink" target="_blank" rel="noopener noreferrer">${lang === 'ar' ? 'فتح الفيديو أو تنزيله' : 'Open or download video'}</a>
+          </div>
+
           <div class="import-video-panel">
             <h3>${lang === 'ar' ? 'إضافة فيديو جاهز' : 'Add an existing video'}</h3>
             <p>${lang === 'ar' ? 'ارفع فيديو MP4 من جهازك لعرضه داخل مساحة العمل.' : 'Upload an MP4 video from your device to preview it in your workspace.'}</p>
@@ -276,40 +299,110 @@ function render() {
     const prompt = document.querySelector('#prompt').value.trim()
     const toast = document.querySelector('#toast')
     const button = document.querySelector('#generateBtn')
+    const consent = document.querySelector('#hfVideoConsent')
+    const videoPanel = document.querySelector('#generatedVideoPanel')
+    const video = document.querySelector('#generatedVideo')
+    const videoLink = document.querySelector('#generatedVideoLink')
     const showToast = message => {
       toast.textContent = message
       toast.classList.add('show')
     }
+    const setProgress = message => {
+      document.querySelector('#notice').textContent = '✧ ' + message
+      showToast(message)
+    }
+
     if (!prompt) {
       showToast(t('alertPrompt'))
       return
     }
+    if (!getHuggingFaceAccessToken()) {
+      showToast(lang === 'ar' ? 'اربط حساب Hugging Face أولاً.' : 'Connect your Hugging Face account first.')
+      document.querySelector('#huggingFaceConnect').scrollIntoView({ behavior: 'smooth', block: 'center' })
+      return
+    }
+    if (!consent.checked) {
+      showToast(lang === 'ar' ? 'وافق على إرسال الوصف والصورة قبل البدء.' : 'Please consent to sending the prompt and image before generating.')
+      consent.focus()
+      return
+    }
+    if (mode === 'image' && !selectedImageData) {
+      showToast(lang === 'ar' ? 'أضف صورة مرجعية أولاً.' : 'Add a reference image first.')
+      return
+    }
+
     button.disabled = true
     button.style.opacity = '.65'
-    showToast(lang === 'ar' ? 'جارٍ إرسال طلبك إلى محرك الفيديو...' : 'Sending your request to the video engine...')
+    videoPanel.hidden = true
+    video.pause()
+    video.removeAttribute('src')
+    video.load()
+
     try {
-      const response = await fetch('/api/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          prompt,
-          motion: document.querySelector('#motionPrompt').value.trim(),
-          mode,
-          imageData: selectedImageData,
-          duration: document.querySelector('#duration').value,
-          aspectRatio: document.querySelector('#ratio').value,
-          style: document.querySelector('#style').value
-        })
+      const token = getHuggingFaceAccessToken()
+      const client = await Client.connect(VIDEO_SPACE, {
+        token,
+        events: ['data', 'status']
       })
-      const data = await response.json()
-      if (!response.ok) throw new Error(data.error || 'Generation request failed.')
-      showToast(lang === 'ar' ? 'تم إرسال الطلب إلى محرك الفيديو بنجاح.' : 'Your request was accepted by the video engine.')
-    } catch (error) {
-      showToast(lang === 'ar'
-        ? (error.message.includes('not connected') || error.message.includes('not configured')
-            ? 'واجهة الموقع أصبحت جاهزة للاتصال، لكن مزوّد توليد الفيديو لم يُربط بعد. لم يتم إنشاء فيديو ولم تُخصم أي أموال.'
-            : 'تعذّر إرسال الطلب: ' + error.message)
-        : error.message)
+      const stylePrompts = {
+        cinematic: 'cinematic composition, dramatic lighting, smooth camera movement',
+        realistic: 'photorealistic details, natural lighting, realistic motion',
+        anime: 'anime style, expressive motion, richly colored animation',
+        cartoon: 'stylized 3D cartoon, expressive characters, playful motion'
+      }
+      const stylePrompt = stylePrompts[document.querySelector('#style').value] || stylePrompts.cinematic
+      const motion = document.querySelector('#motionPrompt').value.trim()
+      const fullPrompt = (stylePrompt + '. ' + prompt + (motion ? '. Motion: ' + motion : '')).slice(0, 1800)
+      const image = selectedImageData
+        ? handle_file(await (await fetch(selectedImageData)).blob())
+        : null
+      const ratios = {
+        '16:9': [1280, 704],
+        '9:16': [704, 1280],
+        '1:1': [704, 704]
+      }
+      const [width, height] = ratios[document.querySelector('#ratio').value] || ratios['16:9']
+      const submission = client.submit('/generate_video', [
+        fullPrompt,
+        image,
+        width,
+        height,
+        73,
+        20,
+        5.0,
+        -1
+      ])
+      let resultData = null
+      for await (const event of submission) {
+        if (event.type === 'status') {
+          const stage = event.stage || event.status?.stage
+          if (stage === 'error') throw new Error('SPACE_GENERATION_FAILED')
+          if (stage === 'pending') {
+            const queueText = event.position
+              ? (lang === 'ar' ? 'طلبك في الانتظار، ترتيبه ' + event.position + '…' : 'Your request is queued at position ' + event.position + '…')
+              : (lang === 'ar' ? 'بانتظار توفر مساحة التوليد…' : 'Waiting for the generation Space…')
+            setProgress(queueText)
+          } else if (stage === 'generating') {
+            setProgress(lang === 'ar' ? 'يجري إنشاء الفيديو الآن؛ قد يستغرق ذلك بضع دقائق…' : 'The video is generating; this may take a few minutes…')
+          }
+        }
+        if (event.type === 'data') resultData = event.data
+      }
+
+      const outputs = Array.isArray(resultData) ? resultData : resultData?.data
+      const videoOutput = Array.isArray(outputs) ? outputs[0] : resultData?.video || resultData
+      const videoUrl = getVideoFileUrl(videoOutput)
+      if (!videoUrl) throw new Error('VIDEO_OUTPUT_MISSING')
+
+      video.src = videoUrl
+      videoLink.href = videoUrl
+      videoPanel.hidden = false
+      videoPanel.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      setProgress(lang === 'ar' ? 'اكتمل الفيديو. يمكنك تشغيله أو فتحه للتنزيل.' : 'Your video is ready. Play it or open it to download.')
+    } catch {
+      setProgress(lang === 'ar'
+        ? 'تعذّر إنشاء الفيديو. قد تكون المساحة مشغولة أو حصة اليوم انتهت؛ أعد ربط الحساب أو جرّب لاحقاً.'
+        : 'Video generation failed. The Space may be busy or your daily quota may be used up. Reconnect your account or try again later.')
     } finally {
       button.disabled = false
       button.style.opacity = '1'
