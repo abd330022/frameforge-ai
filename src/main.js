@@ -56,7 +56,7 @@ const copy = {
     generate: 'إنشاء الفيديو', free: 'تجربة مجانية — تستخدم حصة Hugging Face',
     ideas: 'أفكار تلهمك', idea1: 'مدينة مستقبلية تحت المطر', idea2: 'مغامرة كرتونية في الغابة', idea3: 'إعلان سينمائي لمنتجك',
     how: 'من الفكرة إلى الفيديو بثلاث خطوات', step1: 'اكتب فكرتك', step1d: 'صف المشهد الذي تريد رؤيته ببساطة.', step2: 'اختر أسلوبك', step2d: 'حدد النمط والمدة والأبعاد المناسبة.', step3: 'أنشئ وشارك', step3d: 'راجع النتيجة وجهّزها للمشاركة.',
-    footer: 'مساحة إبداعك تبدأ من هنا.', demoTitle: 'واجهة تجريبية', demoText: 'يُرسل وصفك والصورة التي تختارها إلى مساحة عامة على Hugging Face لإنشاء مقطع يقارب ثانيتين. التوليد يستهلك من حصة ZeroGPU لحسابك.',
+    footer: 'مساحة إبداعك تبدأ من هنا.', demoTitle: 'معلومة عن التوليد', demoText: 'لإنشاء فيديو قصير وربط الاستخدام بحصتك، سيرسل الموقع وصفك والصورة التي تختارها ورمز وصول Hugging Face إلى مساحة عامة يديرها Upsampler على Hugging Face.',
     alertPrompt: 'اكتب وصفاً للفيديو أولاً.', alertDemo: 'تعذّر إنشاء الفيديو. قد تكون مساحة التوليد مشغولة أو انتهت حصة ZeroGPU اليومية. حاول لاحقاً.',
     language: 'English'
   },
@@ -81,7 +81,7 @@ const copy = {
     generate: 'Create video', free: 'Free trial — uses Hugging Face quota',
     ideas: 'Ideas to inspire you', idea1: 'A futuristic city in the rain', idea2: 'A cartoon adventure in the forest', idea3: 'A cinematic product commercial',
     how: 'From idea to video in three steps', step1: 'Write your idea', step1d: 'Describe the scene you want to see.', step2: 'Choose your style', step2d: 'Set the visual style, duration and ratio.', step3: 'Create and share', step3d: 'Review your result and get it ready to share.',
-    footer: 'Your creative space starts here.', demoTitle: 'Prototype interface', demoText: 'Your prompt and selected image are sent to a public Hugging Face Space to create a video around 2 seconds long. Generation uses your account’s ZeroGPU quota.',
+    footer: 'Your creative space starts here.', demoTitle: 'About generation', demoText: 'To create a short video and associate usage with your quota, the site sends your prompt, selected image, and Hugging Face access token to Upsampler’s public Hugging Face Space.',
     alertPrompt: 'Please describe your video first.', alertDemo: 'Video generation failed. The shared Space may be busy or your daily ZeroGPU quota may be used up. Please try again later.',
     language: 'العربية'
   }
@@ -176,7 +176,7 @@ function render() {
             <div class="hf-connect-copy">
               <span class="hf-connect-kicker">HUGGING FACE</span>
               <h3 id="hfConnectTitle">${lang === 'ar' ? 'اربط حسابك من داخل FrameForge' : 'Connect your account from FrameForge'}</h3>
-              <p>${lang === 'ar' ? 'تسجيل الدخول يتم لدى Hugging Face. قبل كل إنشاء، اختر الموافقة على إرسال الوصف والصورة ورمز وصول Hugging Face إلى مساحة عامة لتوليد الفيديو وربط الاستخدام بحسابك. تُستخدم حصة ZeroGPU، وقد يتغير وقت الانتظار أو توفر المساحة.' : 'Sign-in happens on Hugging Face. Before each generation, choose to send your prompt, image, and Hugging Face access token to a public generation Space to associate usage with your account. Your ZeroGPU quota is used, and wait times or availability may change.'}</p>
+              <p>${lang === 'ar' ? 'تسجيل الدخول يتم لدى Hugging Face. قبل كل إنشاء، اختر الموافقة على إرسال الوصف والصورة ورمز الوصول إلى مساحة عامة يديرها Upsampler لتوليد الفيديو وربط الاستخدام بحسابك. تُستخدم حصة ZeroGPU، وقد يتغير وقت الانتظار أو توفر المساحة.' : 'Sign-in happens on Hugging Face. Before each generation, choose to send your prompt, image, and access token to Upsampler’s public Hugging Face Space to create the video and associate usage with your account. Your ZeroGPU quota is used, and wait times or availability may change.'}</p>
             </div>
             <div class="hf-connect-actions">
               <button class="hf-connect-btn" id="hfConnectBtn" type="button">${lang === 'ar' ? '🤗 ربط حساب Hugging Face' : '🤗 Connect Hugging Face'}</button>
@@ -187,7 +187,7 @@ function render() {
           </section>
           <label class="hf-video-consent">
             <input id="hfVideoConsent" type="checkbox" />
-            <span>${lang === 'ar' ? 'أوافق على إرسال وصفي والصورة (إن وُجدت) ورمز وصول Hugging Face إلى مساحة توليد عامة لإنشاء الفيديو وربط الاستخدام بحصة حسابي. قد تُستخدم أرصدة مدفوعة إذا انتهت الحصة المجانية.' : 'I agree to send my prompt, image (if any), and Hugging Face access token to a public generation Space to create the video and associate usage with my account quota. Paid Hugging Face credits may be used after the free quota is exhausted.'}</span>
+            <span>${lang === 'ar' ? 'أوافق على إرسال وصفي والصورة (إن وُجدت) ورمز وصول Hugging Face إلى مساحة عامة يديرها Upsampler لإنشاء الفيديو وربط الاستخدام بحصة حسابي. قد تُستخدم أرصدة مدفوعة بعد انتهاء الحصة المجانية.' : 'I agree to send my prompt, image (if any), and Hugging Face access token to Upsampler’s public Hugging Face Space to create the video and associate usage with my account quota. Paid credits may be used after the free quota is exhausted.'}</span>
           </label>
           <p class="hf-video-disclosure">${lang === 'ar' ? 'المحرك الحالي ينشئ مقطعاً واحداً مدته نحو ثانيتين. قد يستغرق التوليد والانتظار عدة دقائق.' : 'The current engine creates one video around 2 seconds long. Generation and queueing can take several minutes.'}</p>
           <button class="generate-btn" id="generateBtn"><span>✦</span>${t('generate')} <b>↗</b></button>
