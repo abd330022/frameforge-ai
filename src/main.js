@@ -56,7 +56,7 @@ const copy = {
     generate: 'إنشاء الفيديو', free: 'تجربة مجانية — تستخدم حصة Hugging Face',
     ideas: 'أفكار تلهمك', idea1: 'مدينة مستقبلية تحت المطر', idea2: 'مغامرة كرتونية في الغابة', idea3: 'إعلان سينمائي لمنتجك',
     how: 'من الفكرة إلى الفيديو بثلاث خطوات', step1: 'اكتب فكرتك', step1d: 'صف المشهد الذي تريد رؤيته ببساطة.', step2: 'اختر أسلوبك', step2d: 'حدد النمط والمدة والأبعاد المناسبة.', step3: 'أنشئ وشارك', step3d: 'راجع النتيجة وجهّزها للمشاركة.',
-    footer: 'مساحة إبداعك تبدأ من هنا.', demoTitle: 'معلومة عن التوليد', demoText: 'لإنشاء فيديو قصير وربط الاستخدام بحصتك، سيرسل الموقع وصفك والصورة التي تختارها ورمز وصول Hugging Face إلى مساحة عامة يديرها Upsampler على Hugging Face.',
+    footer: 'مساحة إبداعك تبدأ من هنا.', demoTitle: 'معلومة عن التوليد', demoText: 'تتوفر مدد 3 أو 5 أو 8 ثوانٍ؛ المدة الأطول تستهلك حصة ZeroGPU أكثر. سيرسل الموقع وصفك والصورة التي تختارها ورمز وصول Hugging Face إلى مساحة عامة يديرها Upsampler.',
     alertPrompt: 'اكتب وصفاً للفيديو أولاً.', alertDemo: 'تعذّر إنشاء الفيديو. قد تكون مساحة التوليد مشغولة أو انتهت حصة ZeroGPU اليومية. حاول لاحقاً.',
     language: 'English'
   },
@@ -81,7 +81,7 @@ const copy = {
     generate: 'Create video', free: 'Free trial — uses Hugging Face quota',
     ideas: 'Ideas to inspire you', idea1: 'A futuristic city in the rain', idea2: 'A cartoon adventure in the forest', idea3: 'A cinematic product commercial',
     how: 'From idea to video in three steps', step1: 'Write your idea', step1d: 'Describe the scene you want to see.', step2: 'Choose your style', step2d: 'Set the visual style, duration and ratio.', step3: 'Create and share', step3d: 'Review your result and get it ready to share.',
-    footer: 'Your creative space starts here.', demoTitle: 'About generation', demoText: 'To create a short video and associate usage with your quota, the site sends your prompt, selected image, and Hugging Face access token to Upsampler’s public Hugging Face Space.',
+    footer: 'Your creative space starts here.', demoTitle: 'About generation', demoText: 'Choose 3, 5, or 8 seconds. Longer clips use more ZeroGPU quota. The site sends your prompt, selected image, and Hugging Face access token to Upsampler’s public Hugging Face Space.',
     alertPrompt: 'Please describe your video first.', alertDemo: 'Video generation failed. The shared Space may be busy or your daily ZeroGPU quota may be used up. Please try again later.',
     language: 'العربية'
   }
@@ -168,7 +168,7 @@ function render() {
             <p class="notice">${t('characterNote')}</p>
           </div>
           <div class="settings-grid">
-            <div class="setting"><label for="duration">${t('duration')}</label><select id="duration"><option value="2">2 ${t('seconds')}</option></select></div>
+            <div class="setting"><label for="duration">${t('duration')}</label><select id="duration"><option value="3">3 ${t('seconds')}</option><option value="5">5 ${t('seconds')}</option><option value="8">8 ${t('seconds')}</option></select></div>
             <div class="setting"><label for="style">${t('style')}</label><select id="style"><option value="cinematic">${t('cinematic')}</option><option value="realistic">${t('realistic')}</option><option value="anime">${t('anime')}</option><option value="cartoon">${t('cartoon')}</option></select></div>
             <div class="setting"><label for="ratio">${t('ratio')}</label><select id="ratio"><option>16:9</option><option>9:16</option><option>1:1</option></select></div>
           </div>
@@ -189,7 +189,7 @@ function render() {
             <input id="hfVideoConsent" type="checkbox" />
             <span>${lang === 'ar' ? 'أوافق على إرسال وصفي والصورة (إن وُجدت) ورمز وصول Hugging Face إلى مساحة عامة يديرها Upsampler لإنشاء الفيديو وربط الاستخدام بحصة حسابي. قد تُستخدم أرصدة مدفوعة بعد انتهاء الحصة المجانية.' : 'I agree to send my prompt, image (if any), and Hugging Face access token to Upsampler’s public Hugging Face Space to create the video and associate usage with my account quota. Paid credits may be used after the free quota is exhausted.'}</span>
           </label>
-          <p class="hf-video-disclosure">${lang === 'ar' ? 'المحرك الحالي ينشئ مقطعاً واحداً مدته نحو ثانيتين. قد يستغرق التوليد والانتظار عدة دقائق.' : 'The current engine creates one video around 2 seconds long. Generation and queueing can take several minutes.'}</p>
+          <p class="hf-video-disclosure">${lang === 'ar' ? 'اختر مدة 3 أو 5 أو 8 ثوانٍ. المدة الأطول تستهلك حصة أكبر، وقد يستغرق الانتظار والتوليد عدة دقائق.' : 'Choose 3, 5, or 8 seconds. Longer clips use more of your quota, and queueing and generation may take several minutes.'}</p>
           <button class="generate-btn" id="generateBtn"><span>✦</span>${t('generate')} <b>↗</b></button>
           <p class="notice" id="notice">✧ ${t('demoText')}</p>
           <div class="generated-video-panel" id="generatedVideoPanel" hidden>
@@ -363,7 +363,7 @@ function render() {
       }
       const [width, height] = ratios[document.querySelector('#ratio').value] || ratios['16:9']
       const negativePrompt = 'Bright tones, overexposed, static, blurred details, subtitles, low quality, deformed faces or hands, watermark, text, signature'
-      const durationSeconds = Number(document.querySelector('#duration').value) || 2
+      const durationSeconds = Number(document.querySelector('#duration').value) || 3
       const submission = client.submit('/generate_video', [
         image,
         fullPrompt,
