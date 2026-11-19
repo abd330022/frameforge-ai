@@ -27,9 +27,9 @@ Convert the user's story into a coherent short animated film storyboard.
 Write all natural-language values in ${langName}.
 Preserve the story's meaning. Do not add unrelated characters or events.
 Create 3 to 8 scenes suitable for a ${duration} ${style} animation.
-Keep each recurring character's visual_identity exactly consistent across scenes.
+Keep each recurring character's visual_identity exactly consistent across scenes.\nChoose a voice_profile for each character from the character description and personality. Use Auto if age, gender presentation, pitch, or whispering style is uncertain. Keep English accents and Chinese dialect at Auto for Arabic dialogue.
 Each scene must have a clear visual_description, visible action, camera direction, dialogue, sound effects, and duration_seconds.
-Dialogue should be concise and assigned to a character. If there is no dialogue, use an empty array.
+Dialogue should be concise and assigned to a character (each line should fit a short 3–8 second clip). Unless the user clearly asks for silence, give the main character one brief, natural line in the first scene.
 Return only JSON matching the required schema.
 
 USER STORY:
@@ -42,8 +42,18 @@ ${story.trim()}`;
       logline: { type: 'STRING' },
       visual_style: { type: 'STRING' },
       characters: { type: 'ARRAY', items: { type: 'OBJECT', properties: {
-        name: { type: 'STRING' }, description: { type: 'STRING' }, visual_identity: { type: 'STRING' }
-      }, required: ['name', 'description', 'visual_identity'] } },
+        name: { type: 'STRING' },
+        description: { type: 'STRING' },
+        visual_identity: { type: 'STRING' },
+        voice_profile: { type: 'OBJECT', properties: {
+          gender: { type: 'STRING', enum: ['Auto', 'Male / 男', 'Female / 女'] },
+          age: { type: 'STRING', enum: ['Auto', 'Child / 儿童', 'Teenager / 少年', 'Young Adult / 青年', 'Middle-aged / 中年', 'Elderly / 老年'] },
+          pitch: { type: 'STRING', enum: ['Auto', 'Very Low Pitch / 极低音调', 'Low Pitch / 低音调', 'Moderate Pitch / 中音调', 'High Pitch / 高音调', 'Very High Pitch / 极高音调'] },
+          style: { type: 'STRING', enum: ['Auto', 'Whisper / 耳语'] },
+          english_accent: { type: 'STRING', enum: ['Auto', 'American Accent / 美式口音', 'Australian Accent / 澳大利亚口音', 'British Accent / 英国口音', 'Chinese Accent / 中国口音', 'Canadian Accent / 加拿大口音', 'Indian Accent / 印度口音', 'Korean Accent / 韩国口音', 'Portuguese Accent / 葡萄牙口音', 'Russian Accent / 俄罗斯口音', 'Japanese Accent / 日本口音'] },
+          chinese_dialect: { type: 'STRING', enum: ['Auto', 'Henan Dialect / 河南话', 'Shaanxi Dialect / 陕西话', 'Sichuan Dialect / 四川话', 'Guizhou Dialect / 贵州话', 'Yunnan Dialect / 云南话', 'Guilin Dialect / 桂林话', 'Jinan Dialect / 济南话', 'Shijiazhuang Dialect / 石家庄话', 'Gansu Dialect / 甘肃话', 'Ningxia Dialect / 宁夏话', 'Qingdao Dialect / 青岛话', 'Northeast Dialect / 东北话'] }
+        }, required: ['gender', 'age', 'pitch', 'style', 'english_accent', 'chinese_dialect'] }
+      }, required: ['name', 'description', 'visual_identity', 'voice_profile'] } },
       scenes: { type: 'ARRAY', items: { type: 'OBJECT', properties: {
         number: { type: 'INTEGER' }, title: { type: 'STRING' }, location: { type: 'STRING' },
         visual_description: { type: 'STRING' }, action: { type: 'STRING' }, camera: { type: 'STRING' },

@@ -47,6 +47,7 @@ export function mountStoryPlanner() {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'تعذّر تحليل القصة.');
       const board = data.storyboard;
+      window.dispatchEvent(new CustomEvent('frameforge:storyboard-ready', { detail: { story, storyboard: board } }));
       const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
       result.innerHTML = `
         <div class="storyboard-summary"><h3>${escapeHtml(board.title)}</h3><p>${escapeHtml(board.logline)}</p></div>

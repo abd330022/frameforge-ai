@@ -29,8 +29,8 @@ async function loadWorkspaceVideo() {
   })
 }
 
-import { mountCharacterLibrary } from './character-library.js'
 import { mountStoryPlanner } from './story-planner.js'
+import { generateAudioTracks, muxAudioIntoVideo } from './audio.js'
 import { Client, handle_file } from '@gradio/client'
 import { mountHuggingFaceConnect, getHuggingFaceAccessToken } from './huggingface-auth.js'
 
@@ -44,13 +44,10 @@ const copy = {
     textMode: 'من نص', imageMode: 'من صورة', storyMode: 'من قصة',
     upload: 'أضف صورة مرجعية', uploadHint: 'اسحب الصورة هنا أو اضغط للاختيار',
     motion: 'وصف الحركة المطلوبة', motionHint: 'مثال: يمشي البطل نحو الباب ويفتحه، ثم تقترب الكاميرا منه ببطء...',
-    voiceLanguage: 'لغة الصوت', voiceArabic: 'العربية', voiceEnglish: 'الإنجليزية', voiceAccent: 'اللهجة / اللكنة', accentMsa: 'العربية الفصحى', accentLevant: 'الشامية', accentEgypt: 'المصرية', accentGulf: 'الخليجية', accentUS: 'الإنجليزية الأمريكية', accentUK: 'الإنجليزية البريطانية',
-    voiceType: 'نوع الصوت', voiceFemale: 'صوت نسائي', voiceMale: 'صوت رجالي',
-    voiceCharacterMode: 'صوت الشخصيات', voiceOff: 'بدون صوت للشخصيات (حركة فقط)', voiceOn: 'الشخصيات تتحدث', voiceCharacter: 'صوت الشخصية', voiceChildBoy: 'ولد صغير', voiceChildGirl: 'بنت صغيرة', voiceYoungMan: 'شاب', voiceYoungWoman: 'فتاة شابة', voiceAdultMan: 'رجل بالغ', voiceAdultWoman: 'امرأة بالغة', voiceOldMan: 'رجل كبير في السن', voiceOldWoman: 'امرأة كبيرة في السن', voiceCartoon: 'صوت كرتوني',
-    soundTitle: 'الأصوات والمؤثرات', autoSounds: 'اقترح الأصوات تلقائياً من القصة', autoSoundsHint: 'سيحلل النظام المشاهد ويقترح أصوات الشخصيات والحيوانات والمؤثرات، ويمكنك تعديلها.',
-    soundEffects: 'المؤثرات الصوتية', soundEffectsHint: 'مثل اصطدام، سقوط، تحطم زجاج، خطوات، مطر ورعد', animalSounds: 'أصوات الحيوانات', animalSoundsHint: 'مثل كلب، قطة، حصان، أسد وطيور',
-    saveCharacter: 'حفظ الصورة كشخصية مرجعية على هذا الجهاز',
-    characterNote: 'إعدادات الصوت هنا لتجهيز اختياراتك؛ تشغيل الأصوات وتوليدها يحتاجان إلى ربط محرك صوت.',
+    autoCharacterVoice: 'توليد صوت الشخصية تلقائياً', autoCharacterVoiceHint: 'سيكتب الذكاء الاصطناعي حواراً قصيراً عند الحاجة، ويختار نبرة مناسبة لوصف الشخصية. حركة الشفاه لا تتزامن مع الكلام حالياً.',
+    characterDialogue: 'حوار الشخصية (اختياري)', characterDialogueHint: 'اكتب جملة للشخصية، أو اتركه فارغاً ليكتب الذكاء الاصطناعي حواراً مناسباً للقصة.',
+    soundTitle: 'الصوت والحوار والمؤثرات', autoSounds: 'توليد المؤثرات الصوتية تلقائياً', autoSoundsHint: 'ينشئ الذكاء الاصطناعي أصواتاً مناسبة للمشهد والحيوانات المذكورة.',
+    soundEffects: 'مؤثرات إضافية', soundEffectsHint: 'مثل خطوات، مطر ورعد، اصطدام أو تحطم زجاج', animalSounds: 'أصوات حيوانات إضافية', animalSoundsHint: 'مثل كلب، قطة، حصان أو طيور',
     duration: 'المدة', style: 'النمط البصري', ratio: 'الأبعاد',
     seconds: 'ثوانٍ', cinematic: 'سينمائي', anime: 'أنمي', realistic: 'واقعي', cartoon: 'كرتوني',
     generate: 'إنشاء الفيديو', free: 'تجربة مجانية — تستخدم حصة Hugging Face',
@@ -69,13 +66,10 @@ const copy = {
     textMode: 'Text to video', imageMode: 'Image to video', storyMode: 'Story to video',
     upload: 'Add a reference image', uploadHint: 'Drop an image here or click to browse',
     motion: 'Describe the motion', motionHint: 'Example: the hero walks to the door and opens it, then the camera slowly moves closer...',
-    voiceLanguage: 'Voice language', voiceArabic: 'Arabic', voiceEnglish: 'English', voiceAccent: 'Dialect / accent', accentMsa: 'Modern Standard Arabic', accentLevant: 'Levantine Arabic', accentEgypt: 'Egyptian Arabic', accentGulf: 'Gulf Arabic', accentUS: 'American English', accentUK: 'British English',
-    voiceType: 'Voice type', voiceFemale: 'Female voice', voiceMale: 'Male voice',
-    voiceCharacterMode: 'Character audio', voiceOff: 'No character voice (motion only)', voiceOn: 'Characters speak', voiceCharacter: 'Character voice', voiceChildBoy: 'Young boy', voiceChildGirl: 'Young girl', voiceYoungMan: 'Young man', voiceYoungWoman: 'Young woman', voiceAdultMan: 'Adult man', voiceAdultWoman: 'Adult woman', voiceOldMan: 'Older man', voiceOldWoman: 'Older woman', voiceCartoon: 'Cartoon voice',
-    soundTitle: 'Sounds and effects', autoSounds: 'Suggest sounds automatically from the story', autoSoundsHint: 'The system will analyze scenes and suggest character voices, animal sounds and effects. You can edit them.',
-    soundEffects: 'Sound effects', soundEffectsHint: 'Such as collision, fall, breaking glass, footsteps, rain and thunder', animalSounds: 'Animal sounds', animalSoundsHint: 'Such as dog, cat, horse, lion and birds',
-    saveCharacter: 'Save image as a character reference on this device',
-    characterNote: 'These voice settings prepare your choices; playing and generating audio requires a connected audio engine.',
+    autoCharacterVoice: 'Generate character voice automatically', autoCharacterVoiceHint: 'AI can write a short line when needed and select a voice style from the character description. Lip movement is not synchronized yet.',
+    characterDialogue: 'Character dialogue (optional)', characterDialogueHint: 'Write a line for the character, or leave this blank and AI will create dialogue that fits the story.',
+    soundTitle: 'Voice, dialogue and sound effects', autoSounds: 'Generate sound effects automatically', autoSoundsHint: 'AI creates effects that fit the scene and any animals mentioned.',
+    soundEffects: 'Extra sound effects', soundEffectsHint: 'For example: footsteps, rain and thunder, collision, or breaking glass', animalSounds: 'Extra animal sounds', animalSoundsHint: 'For example: dog, cat, horse, or birds',
     duration: 'Duration', style: 'Visual style', ratio: 'Aspect ratio',
     seconds: 'seconds', cinematic: 'Cinematic', anime: 'Anime', realistic: 'Realistic', cartoon: 'Cartoon',
     generate: 'Create video', free: 'Free trial — uses Hugging Face quota',
@@ -91,6 +85,11 @@ let lang = 'ar'
 let mode = 'text'
 let selectedImage = null
 let selectedImageData = null
+let latestStoryboard = null
+let generatedVideoObjectUrl = null
+let generatedMixObjectUrl = null
+let generatedTrackObjectUrls = []
+window.addEventListener('frameforge:storyboard-ready', event => { latestStoryboard = event.detail })
 const t = key => copy[lang][key]
 const VIDEO_SPACE = 'Upsampler/wan-2-2-5b-video';
 const VIDEO_SPACE_URL = 'https://upsampler-wan-2-2-5b-video.hf.space';
@@ -109,7 +108,7 @@ function render() {
   document.documentElement.lang = lang
   document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr'
   app.innerHTML = `
-    <aside class="side-nav"><a class="brand side-brand" href="#home"><span class="brand-mark">F</span><span>FrameForge <i>AI</i></span></a><div class="side-caption">مساحة العمل</div><nav class="side-links"><a href="#home">⌂　الرئيسية</a><a class="side-active" href="#create">✦　إنشاء الفيديو</a><a href="#ideas">◈　استكشاف</a><a href="#create">▤　مشاريعي</a><a href="#characterLibrary">♙　مكتبة الشخصيات</a></nav><div class="side-bottom"><a href="#create">⚙　الإعدادات</a><a href="#how">؟　المساعدة</a></div></aside>
+    <aside class="side-nav"><a class="brand side-brand" href="#home"><span class="brand-mark">F</span><span>FrameForge <i>AI</i></span></a><div class="side-caption">مساحة العمل</div><nav class="side-links"><a href="#home">⌂　الرئيسية</a><a class="side-active" href="#create">✦　إنشاء الفيديو</a><a href="#ideas">◈　استكشاف</a><a href="#create">▤　مشاريعي</a></nav><div class="side-bottom"><a href="#create">⚙　الإعدادات</a><a href="#how">؟　المساعدة</a></div></aside>
     <header class="topbar">
       <a class="brand" href="#" aria-label="FrameForge AI home"><span class="brand-mark">F</span><span>FrameForge <i>AI</i></span></a>
       <nav><a href="#create">${t('navCreate')}</a><a href="#how">${t('navExplore')}</a></nav>
@@ -147,16 +146,11 @@ function render() {
           <div class="extra-controls">
             <label class="field-label" for="motionPrompt">${t('motion')}</label>
             <textarea id="motionPrompt" rows="2" placeholder="${t('motionHint')}"></textarea>
-            <div class="setting"><label for="characterAudioMode">${t("voiceCharacterMode")}</label><select id="characterAudioMode"><option value="off">${t("voiceOff")}</option><option value="on">${t("voiceOn")}</option></select></div>
-            <div class="setting"><label for="voiceAccent">${t("voiceAccent")}</label><select id="voiceAccent"><option value="msa">${t("accentMsa")}</option><option value="levant">${t("accentLevant")}</option><option value="egypt">${t("accentEgypt")}</option><option value="gulf">${t("accentGulf")}</option><option value="us">${t("accentUS")}</option><option value="uk">${t("accentUK")}</option></select></div>
-            <div class="settings-grid voice-grid">
-              <div class="setting"><label for="voiceLanguage">${t('voiceLanguage')}</label><select id="voiceLanguage"><option value="ar">${t('voiceArabic')}</option><option value="en">${t('voiceEnglish')}</option></select></div>
-              <div class="setting"><label for="voiceCharacter">${t('voiceCharacter')}</label><select id="voiceCharacter">
-                <option>${t('voiceChildBoy')}</option><option>${t('voiceChildGirl')}</option><option>${t('voiceYoungMan')}</option><option>${t('voiceYoungWoman')}</option><option>${t('voiceAdultMan')}</option><option>${t('voiceAdultWoman')}</option><option>${t('voiceOldMan')}</option><option>${t('voiceOldWoman')}</option><option>${t('voiceCartoon')}</option>
-              </select></div>
-            </div>
             <section class="sound-panel">
               <h3>${t('soundTitle')}</h3>
+              <label class="save-character"><input type="checkbox" id="characterAudioMode" checked /> ${t('autoCharacterVoice')}</label>
+              <p class="notice">${t('autoCharacterVoiceHint')}</p>
+              <div class="setting"><label for="characterDialogue">${t('characterDialogue')}</label><textarea id="characterDialogue" rows="2" placeholder="${t('characterDialogueHint')}"></textarea></div>
               <label class="save-character"><input type="checkbox" id="autoSounds" checked /> ${t('autoSounds')}</label>
               <p class="notice">${t('autoSoundsHint')}</p>
               <div class="settings-grid">
@@ -164,8 +158,6 @@ function render() {
                 <div class="setting"><label for="soundEffects">${t('soundEffects')}</label><input id="soundEffects" type="text" placeholder="${t('soundEffectsHint')}" /></div>
               </div>
             </section>
-            <label class="save-character"><input type="checkbox" id="saveCharacter" /> ${t('saveCharacter')}</label>
-            <p class="notice">${t('characterNote')}</p>
           </div>
           <div class="settings-grid">
             <div class="setting"><label for="duration">${t('duration')}</label><select id="duration"><option value="3">3 ${t('seconds')}</option><option value="5">5 ${t('seconds')}</option><option value="8">8 ${t('seconds')}</option></select></div>
@@ -186,6 +178,14 @@ function render() {
             <p class="notice" id="hfConnectStatus" role="status" aria-live="polite"></p>
           </section>
           <label class="hf-video-consent">
+            <input id="aiVoiceConsent" type="checkbox" />
+            <span>${lang === 'ar' ? 'أوافق على تحليل وصفي عبر Gemini داخل FrameForge لكتابة حوار قصير واختيار ملف صوت للشخصية. قد يستهلك ذلك حصة Gemini الخاصة بالموقع.' : 'I agree to have FrameForge analyze my description with Gemini to write a short line and select a character voice profile. This may use the site’s Gemini API quota.'}</span>
+          </label>
+          <label class="hf-video-consent">
+            <input id="hfAudioConsent" type="checkbox" />
+            <span>${lang === 'ar' ? 'أوافق على إرسال وصف المشهد إلى Stable Audio لإنشاء المؤثرات، والحوار وملف الصوت الذي اختاره Gemini إلى OmniVoice، ورمز Hugging Face إلى المساحتين العامتين لتوليد الصوت. قد تُستخدم حصة ZeroGPU أو أرصدة مدفوعة.' : 'I agree to send the scene description to Stable Audio for effects, the dialogue and Gemini-selected voice profile to OmniVoice for speech, and my Hugging Face access token to both public Spaces. This may use ZeroGPU quota or paid credits.'}</span>
+          </label>
+          <label class="hf-video-consent">
             <input id="hfVideoConsent" type="checkbox" />
             <span>${lang === 'ar' ? 'أوافق على إرسال وصفي والصورة (إن وُجدت) ورمز وصول Hugging Face إلى مساحة عامة يديرها Upsampler لإنشاء الفيديو وربط الاستخدام بحصة حسابي. قد تُستخدم أرصدة مدفوعة بعد انتهاء الحصة المجانية.' : 'I agree to send my prompt, image (if any), and Hugging Face access token to Upsampler’s public Hugging Face Space to create the video and associate usage with my account quota. Paid credits may be used after the free quota is exhausted.'}</span>
           </label>
@@ -196,6 +196,13 @@ function render() {
             <h3>${lang === 'ar' ? 'الفيديو الذي أنشأته' : 'Your generated video'}</h3>
             <video id="generatedVideo" controls playsinline></video>
             <a class="generated-video-link" id="generatedVideoLink" target="_blank" rel="noopener noreferrer">${lang === 'ar' ? 'فتح الفيديو أو تنزيله' : 'Open or download video'}</a>
+            <div class="generated-audio-panel" id="generatedAudioPanel" hidden>
+              <h3>${lang === 'ar' ? 'الصوت الذي أنشأته' : 'Generated audio'}</h3>
+              <audio id="generatedAudio" controls hidden></audio>
+              <a class="generated-video-link" id="generatedAudioLink" hidden>${lang === 'ar' ? 'تنزيل الصوت' : 'Download audio'}</a>
+              <div id="generatedAudioTracks"></div>
+              <p class="notice" id="generatedAudioStatus"></p>
+            </div>
           </div>
 
           <div class="import-video-panel">
@@ -226,20 +233,9 @@ function render() {
     <footer><a class="brand" href="#"><span class="brand-mark">F</span><span>FrameForge <i>AI</i></span></a><p>${t('footer')}</p><span>© 2026 FRAMEFORGE AI</span></footer>
     <div class="toast" id="toast" role="status"></div>
   `
-  mountCharacterLibrary()
   mountStoryPlanner()
   mountHuggingFaceConnect(lang)
   document.querySelector('#langBtn').addEventListener('click', () => { lang = lang === 'ar' ? 'en' : 'ar'; render() })
-  const voiceLanguage = document.querySelector('#voiceLanguage')
-  const voiceAccent = document.querySelector('#voiceAccent')
-  const updateAccentOptions = () => {
-    const choices = voiceLanguage.value === 'ar'
-      ? [['msa', t('accentMsa')], ['levant', t('accentLevant')], ['egypt', t('accentEgypt')], ['gulf', t('accentGulf')]]
-      : [['us', t('accentUS')], ['uk', t('accentUK')]]
-    voiceAccent.innerHTML = choices.map(([value, label]) => `<option value="${value}">${label}</option>`).join('')
-  }
-  voiceLanguage.addEventListener('change', updateAccentOptions)
-  updateAccentOptions()
   document.querySelectorAll('.mode-tab').forEach(b => b.addEventListener('click', () => { mode = b.dataset.mode; render() }))
   document.querySelectorAll('.idea-card').forEach(b => b.addEventListener('click', () => { document.querySelector('#prompt').value = t(b.dataset.idea); document.querySelector('#create').scrollIntoView({behavior:'smooth'}) }))
   document.querySelector('#browseBtn').addEventListener('click', () => document.querySelector('#imageInput').click())
@@ -251,17 +247,6 @@ function render() {
       const reader=new FileReader()
       reader.onload=()=>{ selectedImageData=reader.result; document.querySelector('.upload-zone strong').textContent=selectedImage; const preview=document.createElement('img'); preview.src=selectedImageData; preview.className='image-preview'; preview.alt='Selected reference'; document.querySelector('#uploadZone').prepend(preview); const icon=document.querySelector('.upload-icon'); if(icon) icon.remove() }
       reader.readAsDataURL(file)
-    }
-  })
-  document.querySelector('#saveCharacter').addEventListener('change', e => {
-    if(e.target.checked && selectedImageData) {
-      try { localStorage.setItem('frameforge-character', JSON.stringify({name:selectedImage,data:selectedImageData})) } catch(err) {}
-      const note=document.querySelector('.extra-controls .notice:last-child')
-      note.textContent=lang==='ar'?'تم حفظ مرجع الصورة على هذا الجهاز.':'Image reference saved on this device.'
-    } else if(e.target.checked) {
-      e.target.checked=false
-      const note=document.querySelector('.extra-controls .notice:last-child')
-      note.textContent=lang==='ar'?'ارفع صورة أولاً ثم احفظها.':'Upload an image first, then save it.'
     }
   })
   let importedVideoUrl = null
@@ -299,10 +284,17 @@ function render() {
     const prompt = document.querySelector('#prompt').value.trim()
     const toast = document.querySelector('#toast')
     const button = document.querySelector('#generateBtn')
-    const consent = document.querySelector('#hfVideoConsent')
+    const videoConsent = document.querySelector('#hfVideoConsent')
+    const audioConsent = document.querySelector('#hfAudioConsent')
+    const aiVoiceConsent = document.querySelector('#aiVoiceConsent')
     const videoPanel = document.querySelector('#generatedVideoPanel')
+    const audioPanel = document.querySelector('#generatedAudioPanel')
     const video = document.querySelector('#generatedVideo')
     const videoLink = document.querySelector('#generatedVideoLink')
+    const audio = document.querySelector('#generatedAudio')
+    const audioLink = document.querySelector('#generatedAudioLink')
+    const audioTracksPanel = document.querySelector('#generatedAudioTracks')
+    const audioStatus = document.querySelector('#generatedAudioStatus')
     const showToast = message => {
       toast.textContent = message
       toast.classList.add('show')
@@ -311,6 +303,11 @@ function render() {
       document.querySelector('#notice').textContent = '✧ ' + message
       showToast(message)
     }
+    const voiceEnabled = document.querySelector('#characterAudioMode').checked
+    const soundEffectsInput = document.querySelector('#soundEffects').value.trim()
+    const animalSoundsInput = document.querySelector('#animalSounds').value.trim()
+    const makeEffects = document.querySelector('#autoSounds').checked || Boolean(soundEffectsInput || animalSoundsInput)
+    const manualDialogue = document.querySelector('#characterDialogue').value.trim()
 
     if (!prompt) {
       showToast(t('alertPrompt'))
@@ -321,9 +318,14 @@ function render() {
       document.querySelector('#huggingFaceConnect').scrollIntoView({ behavior: 'smooth', block: 'center' })
       return
     }
-    if (!consent.checked) {
-      showToast(lang === 'ar' ? 'وافق على إرسال الوصف والصورة قبل البدء.' : 'Please consent to sending the prompt and image before generating.')
-      consent.focus()
+    if (!videoConsent.checked) {
+      showToast(lang === 'ar' ? 'وافق على إرسال الوصف والصورة إلى Upsampler قبل إنشاء الفيديو.' : 'Please consent to sending the prompt and image to Upsampler before generating.')
+      videoConsent.focus()
+      return
+    }
+    if ((makeEffects || voiceEnabled) && !audioConsent.checked) {
+      showToast(lang === 'ar' ? 'وافق على إرسال بيانات الصوت إلى خدمات الصوت أولاً.' : 'Please consent to sending audio data to the audio services first.')
+      audioConsent.focus()
       return
     }
     if (mode === 'image' && !selectedImageData) {
@@ -331,15 +333,74 @@ function render() {
       return
     }
 
+    let storyBoard = latestStoryboard?.story === prompt ? latestStoryboard.storyboard : null
+    let hasVoiceProfile = Boolean(storyBoard?.characters?.some(character => character.voice_profile))
+    const needsVoiceAnalysis = voiceEnabled && !hasVoiceProfile
+    if (needsVoiceAnalysis && !aiVoiceConsent.checked) {
+      showToast(lang === 'ar' ? 'وافق على استخدام Gemini لاختيار الحوار وملف صوت الشخصية.' : 'Please consent to Gemini creating dialogue and selecting a character voice profile.')
+      aiVoiceConsent.focus()
+      return
+    }
+
     button.disabled = true
     button.style.opacity = '.65'
     videoPanel.hidden = true
+    audioPanel.hidden = true
     video.pause()
     video.removeAttribute('src')
     video.load()
+    audio.pause()
+    audio.removeAttribute('src')
+    audio.load()
+    if (generatedVideoObjectUrl) URL.revokeObjectURL(generatedVideoObjectUrl)
+    if (generatedMixObjectUrl) URL.revokeObjectURL(generatedMixObjectUrl)
+    generatedTrackObjectUrls.forEach(url => URL.revokeObjectURL(url))
+    generatedVideoObjectUrl = null
+    generatedMixObjectUrl = null
+    generatedTrackObjectUrls = []
+    videoLink.removeAttribute('download')
+    videoLink.setAttribute('target', '_blank')
+    videoLink.textContent = lang === 'ar' ? 'فتح الفيديو أو تنزيله' : 'Open or download video'
+    audioTracksPanel.replaceChildren()
+    audioStatus.textContent = ''
 
     try {
       const token = getHuggingFaceAccessToken()
+      const durationSeconds = Number(document.querySelector('#duration').value) || 3
+      const style = document.querySelector('#style').value
+      const language = lang === 'en' ? 'en' : 'ar'
+
+      if (needsVoiceAnalysis) {
+        setProgress(lang === 'ar' ? 'يكتب Gemini حواراً قصيراً ويختار ملف صوت الشخصية…' : 'Gemini is writing a short line and selecting the character voice…')
+        try {
+          const response = await fetch('/api/storyboard', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              story: prompt,
+              language,
+              style,
+              duration: durationSeconds + ' seconds'
+            })
+          })
+          const data = await response.json()
+          if (!response.ok) throw new Error(data.error || 'STORYBOARD_FAILED')
+          storyBoard = data.storyboard
+          latestStoryboard = { story: prompt, storyboard: storyBoard }
+          window.dispatchEvent(new CustomEvent('frameforge:storyboard-ready', { detail: latestStoryboard }))
+        } catch {
+          storyBoard = null
+        }
+      }
+
+      const storyDialogue = (storyBoard?.scenes || [])
+        .flatMap(scene => scene.dialogue || [])
+        .find(line => line && typeof line.line === 'string' && line.line.trim())
+      const dialogue = manualDialogue || storyDialogue?.line || ''
+      const speakerName = storyDialogue?.character || ''
+      const character = (storyBoard?.characters || []).find(item => item.name === speakerName) || storyBoard?.characters?.[0] || null
+      const voiceProfile = character?.voice_profile || {}
+
       const client = await Client.connect(VIDEO_SPACE, {
         token,
         events: ['data', 'status']
@@ -350,7 +411,7 @@ function render() {
         anime: 'anime style, expressive motion, richly colored animation',
         cartoon: 'stylized 3D cartoon, expressive characters, playful motion'
       }
-      const stylePrompt = stylePrompts[document.querySelector('#style').value] || stylePrompts.cinematic
+      const stylePrompt = stylePrompts[style] || stylePrompts.cinematic
       const motion = document.querySelector('#motionPrompt').value.trim()
       const fullPrompt = (stylePrompt + '. ' + prompt + (motion ? '. Motion: ' + motion : '')).slice(0, 1800)
       const image = selectedImageData
@@ -363,7 +424,6 @@ function render() {
       }
       const [width, height] = ratios[document.querySelector('#ratio').value] || ratios['16:9']
       const negativePrompt = 'Bright tones, overexposed, static, blurred details, subtitles, low quality, deformed faces or hands, watermark, text, signature'
-      const durationSeconds = Number(document.querySelector('#duration').value) || 3
       const submission = client.submit('/generate_video', [
         image,
         fullPrompt,
@@ -401,8 +461,117 @@ function render() {
       video.src = videoUrl
       videoLink.href = videoUrl
       videoPanel.hidden = false
+
+      if (makeEffects || (voiceEnabled && dialogue)) {
+        audioPanel.hidden = false
+        const progressMessages = {
+          EFFECTS_CONNECTING: lang === 'ar' ? 'يجري تجهيز المؤثرات الصوتية…' : 'Preparing sound effects…',
+          EFFECTS_WAITING: lang === 'ar' ? 'المؤثرات الصوتية في الانتظار…' : 'Sound effects are queued…',
+          EFFECTS_GENERATING: lang === 'ar' ? 'يجري إنشاء المؤثرات الصوتية…' : 'Generating sound effects…',
+          VOICE_CONNECTING: lang === 'ar' ? 'يجري تجهيز صوت الشخصية…' : 'Preparing the character voice…',
+          VOICE_WAITING: lang === 'ar' ? 'صوت الشخصية في الانتظار…' : 'Character voice is queued…',
+          VOICE_GENERATING: lang === 'ar' ? 'يجري إنشاء صوت الشخصية…' : 'Generating the character voice…'
+        }
+        try {
+          const audioResult = await generateAudioTracks({
+            token,
+            prompt,
+            dialogue,
+            voiceProfile,
+            language,
+            durationSeconds,
+            soundEffects: soundEffectsInput,
+            animalSounds: animalSoundsInput,
+            makeEffects,
+            makeVoice: voiceEnabled && Boolean(dialogue),
+            onProgress: stage => { if (progressMessages[stage]) setProgress(progressMessages[stage]) }
+          })
+
+          for (const track of audioResult.tracks) {
+            const row = document.createElement('div')
+            row.className = 'generated-audio-track'
+            const title = document.createElement('strong')
+            title.textContent = track.name.includes('voice')
+              ? (lang === 'ar' ? 'صوت الشخصية' : 'Character voice')
+              : (lang === 'ar' ? 'المؤثرات الصوتية' : 'Sound effects')
+            const player = document.createElement('audio')
+            player.controls = true
+            const trackUrl = URL.createObjectURL(track.blob)
+            generatedTrackObjectUrls.push(trackUrl)
+            player.src = trackUrl
+            const link = document.createElement('a')
+            link.href = trackUrl
+            link.download = track.name
+            link.textContent = lang === 'ar' ? 'تنزيل هذا المسار الصوتي' : 'Download this audio track'
+            row.append(title, player, link)
+            audioTracksPanel.append(row)
+          }
+
+          if (audioResult.errors.length) {
+            audioStatus.textContent = lang === 'ar'
+              ? 'اكتمل جزء من الصوت فقط؛ إحدى خدمات الصوت لم تُكمل طلبها.'
+              : 'Only part of the audio was generated; one audio service did not finish.'
+          }
+
+          try {
+            setProgress(lang === 'ar' ? 'يجري دمج الصوت مع الفيديو…' : 'Mixing the sound into the video…')
+            const muxed = await muxAudioIntoVideo(videoUrl, audioResult.tracks, durationSeconds)
+            generatedVideoObjectUrl = URL.createObjectURL(muxed.videoBlob)
+            generatedMixObjectUrl = URL.createObjectURL(muxed.audioBlob)
+            video.src = generatedVideoObjectUrl
+            videoLink.href = generatedVideoObjectUrl
+            videoLink.removeAttribute('target')
+            videoLink.removeAttribute('rel')
+            videoLink.download = 'frameforge-ai-with-sound.mp4'
+            videoLink.textContent = lang === 'ar' ? 'تنزيل الفيديو مع الصوت' : 'Download video with sound'
+            audio.src = generatedMixObjectUrl
+            audio.hidden = false
+            audioLink.href = generatedMixObjectUrl
+            audioLink.download = 'frameforge-ai-audio-mix.wav'
+            audioLink.textContent = lang === 'ar' ? 'تنزيل الصوت' : 'Download audio'
+            audioLink.hidden = false
+            audioTracksPanel.hidden = true
+            const hasVoiceTrack = audioResult.tracks.some(track => track.name.includes('voice'))
+            const hasEffectsTrack = audioResult.tracks.some(track => track.name.includes('effects'))
+            if (audioResult.errors.length) {
+              audioStatus.textContent = lang === 'ar'
+                ? 'تم دمج الصوت الذي أُنشئ، لكن إحدى خدمات الصوت لم تُكمل طلبها.'
+                : 'Generated audio was mixed into the video, but one audio service did not finish.'
+            } else if (hasVoiceTrack && hasEffectsTrack) {
+              audioStatus.textContent = lang === 'ar'
+                ? 'تم دمج صوت الشخصية والمؤثرات الصوتية داخل الفيديو.'
+                : 'The character voice and sound effects are mixed into the video.'
+            } else if (hasVoiceTrack) {
+              audioStatus.textContent = lang === 'ar'
+                ? 'تم دمج صوت الشخصية داخل الفيديو.'
+                : 'The character voice is mixed into the video.'
+            } else {
+              audioStatus.textContent = lang === 'ar'
+                ? 'تم دمج المؤثرات الصوتية داخل الفيديو.' + (voiceEnabled && !dialogue ? ' لم ينتج الذكاء الاصطناعي حواراً؛ أضف جملة لإنشاء صوت الشخصية.' : '')
+                : 'Sound effects are mixed into the video.' + (voiceEnabled && !dialogue ? ' AI did not create dialogue; add a line to generate the character voice.' : '')
+            }
+          } catch {
+            audio.hidden = true
+            audioLink.hidden = true
+            audioTracksPanel.hidden = false
+            audioStatus.textContent = lang === 'ar'
+              ? 'تم إنشاء الصوت، لكن تعذّر دمجه داخل الفيديو على هذا الجهاز. يمكنك تشغيل المسارات وتنزيلها منفصلة.'
+              : 'Audio was generated but could not be mixed into the video on this device. You can play and download the separate tracks.'
+          }
+        } catch {
+          audioStatus.textContent = lang === 'ar'
+            ? (voiceEnabled && dialogue ? 'تعذّر إنشاء الصوت. قد تكون حصة Hugging Face اليومية انتهت أو الخدمة مشغولة.' : 'تعذّر إنشاء المؤثرات الصوتية. جرّب لاحقاً.')
+            : 'Audio generation failed. The daily Hugging Face quota may be used up, or the service may be busy.'
+        }
+      } else if (voiceEnabled) {
+        audioPanel.hidden = false
+        audioStatus.textContent = lang === 'ar'
+          ? 'أُنشئ الفيديو. لم ينتج الذكاء الاصطناعي حواراً لهذه الشخصية؛ أضف جملة في خانة الحوار لإنشاء صوتها.'
+          : 'Video created. AI did not produce a dialogue line for this character; add a line to generate its voice.'
+      }
+
       videoPanel.scrollIntoView({ behavior: 'smooth', block: 'center' })
-      setProgress(lang === 'ar' ? 'اكتمل الفيديو. يمكنك تشغيله أو فتحه للتنزيل.' : 'Your video is ready. Play it or open it to download.')
+      setProgress(lang === 'ar' ? 'اكتمل الفيديو. يمكنك تشغيله أو تنزيله مع الصوت.' : 'Your video is ready. Play it or download it with sound.')
     } catch {
       setProgress(lang === 'ar'
         ? 'تعذّر إنشاء الفيديو. قد تكون المساحة مشغولة أو حصة اليوم انتهت؛ أعد ربط الحساب أو جرّب لاحقاً.'

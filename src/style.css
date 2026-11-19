@@ -133,3 +133,10 @@ html[dir="ltr"] body{margin-right:0;margin-left:248px}
 .generated-video-panel h3{margin:0 0 12px;color:#f5f1ff;font-size:16px}
 #generatedVideo{display:block;width:100%;max-height:520px;border-radius:10px;background:#05060a}
 .generated-video-link{display:inline-flex;margin-top:12px;padding:10px 14px;border:1px solid #7662a0;border-radius:9px;background:#211c32;color:#e7dcff;font-size:12px}
+
+.generated-audio-panel{margin-top:18px;padding-top:15px;border-top:1px solid #ffffff24}
+.generated-audio-panel[hidden]{display:none}
+.generated-audio-panel audio{display:block;width:100%;margin-top:10px}
+.generated-audio-track{display:grid;gap:8px;margin-top:12px;padding:12px;border:1px solid #ffffff20;border-radius:10px;background:#0a0b13}
+.generated-audio-track audio{width:100%}
+.generated-audio-track a{color:#d9c9ff;font-size:12px}
